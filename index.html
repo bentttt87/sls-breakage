@@ -1,1132 +1,208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>SLS Breakage Monitoring</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-  :root{
-    --navy:#1F3864; --navy-deep:#152845; --bg:#F6F4F0; --panel:#FFFFFF;
-    --clay:#C1573C; --stone:#8B8378; --stone-light:#E4DFD6;
-    --green:#16A34A; --amber:#F59E0B; --red:#DC2626; --blue:#2563EB;
-    --ink:#1C1B19; --ink-soft:#6B6459; --border:#E7E2D8;
-    --roman-red:#E31D2B; --roman-red-deep:#B3121D; --roman-yellow:#F7C600;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);}
-  .app{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
-  .sidebar{background:var(--navy-deep);color:#fff;padding:24px 18px;display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow:hidden;}
-  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-shrink:0;}
-  .brand-mark{width:22px;height:22px;border-radius:5px;background:var(--clay);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
-  .roman-logo{width:46px;height:34px;display:block;flex:0 0 auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.18));}
-  .login-box .roman-logo{width:92px;height:66px;margin-bottom:8px;}
-  .brand-sub{font-size:10.5px;color:#9FB0CC;margin-bottom:16px;letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0;}
-  .badge-real{display:inline-block;background:#16A34A;color:#fff;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:10px;margin-bottom:10px;letter-spacing:0.3px;flex-shrink:0;}
-  .badge-role{display:inline-block;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:10px;margin-bottom:12px;letter-spacing:0.3px;flex-shrink:0;}
-  .badge-role.master{background:var(--clay);color:#fff;}
-  .badge-role.user{background:#3A5787;color:#fff;}
-  .nav-scroll{overflow-y:auto;flex:1 1 auto;min-height:60px;margin:0 -18px;padding:0 18px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;font-size:13px;font-weight:500;color:#C7D2E3;margin-bottom:2px;cursor:pointer;}
-  .nav-item:hover{background:rgba(255,255,255,0.06);}
-  .nav-item.active{background:rgba(255,255,255,0.08);color:#fff;border-left:3px solid var(--clay);padding-left:7px;}
-  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.6;flex-shrink:0;}
-  .sidebar-foot{padding:12px 0 14px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:10.5px;color:#7E8DA8;line-height:1.7;flex-shrink:0;}
-  .logout-btn{margin-top:14px;background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;text-align:left;}
-  .logout-btn:hover{background:rgba(255,255,255,0.14);}
-  .main{padding:22px 30px 40px;}
-  .page{display:none;}
-  .page.active{display:block;}
-  .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:14px;}
-  .topbar h1{font-family:'Space Grotesk',sans-serif;font-size:21px;margin:0 0 3px;}
-  .topbar .period{font-size:12.5px;color:var(--ink-soft);}
-  .filter-select{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:500;color:var(--ink);font-family:'Inter',sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B6459'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:28px;}
-  .pulse{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px;}
-  .pulse-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden;cursor:pointer;}
-  .kpi-spark{display:flex;align-items:center;gap:7px;margin:6px 0 2px;}
-  .kpi-spark svg{flex:0 0 auto;}
-  .kpi-spark span{font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .pulse-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-  .pulse-head .pulse-name{flex:1;margin:0;}
-  .pulse-health{font-size:19px;font-weight:800;color:#fff;
-    border-radius:10px;padding:4px 12px;font-variant-numeric:tabular-nums;flex:0 0 auto;
-    line-height:1.15;min-width:44px;text-align:center;}
-  .pulse-health.hs-good{background:#1B7F4B;}
-  .pulse-health.hs-watch{background:#9A6300;}
-  .pulse-health.hs-risk{background:#C46A1F;}
-  .pulse-health.hs-crit{background:#B3261E;}
-  .pulse-metrics{display:grid;grid-template-columns:1fr;gap:2px;margin:6px 0 4px;}
-  .pulse-metrics div{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
-  .pulse-metrics span{font-size:10px;color:var(--stone);flex:0 0 auto;}
-  .pulse-metrics b{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .pulse-spark{width:100%;height:18px;display:block;margin:4px 0 6px;}
-  .nbc-tab{padding:9px 14px;font-size:12.5px;font-weight:600;color:var(--stone);cursor:pointer;
-    border-bottom:2px solid transparent;}
-  .nbc-tab.active{color:var(--navy);border-bottom-color:var(--navy);}
-  .nbc-page{display:none;} .nbc-page.active{display:block;}
-  .nbc-rate-card{border:1px solid var(--border);border-radius:10px;padding:14px;}
-  .nbc-rate-card .lbl{font-size:11px;font-weight:700;color:var(--stone);text-transform:uppercase;letter-spacing:.4px;}
-  .nbc-rate-card .val{font-size:26px;font-weight:800;color:var(--navy);margin:5px 0 2px;}
-  .nbc-rate-card .val small{font-size:12px;font-weight:600;color:var(--stone);}
-  .nbc-rate-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--stone);margin-top:8px;
-    padding-top:8px;border-top:1px dashed var(--border);}
-  .nbc-gap-up{color:var(--red);font-weight:700;} .nbc-gap-down{color:var(--green);font-weight:700;}
-  .nbc-placeholder{padding:30px 16px;text-align:center;color:var(--stone);font-size:13px;
-    background:repeating-linear-gradient(45deg,#F7F5F1,#F7F5F1 10px,#EFEBE2 10px,#EFEBE2 20px);
-    border-radius:8px;}
-  .hl-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:var(--panel);
-    border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:10px;}
-  .hl-item{display:flex;gap:9px;align-items:flex-start;}
-  .hl-ico{font-size:17px;line-height:1;flex:0 0 auto;}
-  .hl-lbl{font-size:9px;font-weight:700;letter-spacing:.6px;color:var(--stone);text-transform:uppercase;}
-  .hl-val{font-size:14px;font-weight:700;margin-top:1px;}
-  .hl-sub{font-size:11px;color:var(--stone);font-variant-numeric:tabular-nums;}
-  .hl-note{grid-column:1/-1;border-top:1px solid var(--border);padding-top:10px;margin-top:2px;
-    font-size:12px;color:var(--ink-soft);}
-  @media (max-width:820px){ .hl-strip{grid-template-columns:1fr 1fr;} }
-  .pulse-card.selected{box-shadow:0 0 0 2px var(--navy);}
-  .pulse-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
-  .pulse-card.ok::before{background:var(--green);}
-  .pulse-card.watch::before{background:var(--amber);}
-  .pulse-card.alert::before{background:var(--red);}
-  .pulse-name{font-size:12px;font-weight:700;margin-bottom:2px;}
-  .pulse-meta{font-size:10.5px;color:var(--ink-soft);}
-  .pulse-status{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;margin-top:6px;}
-  .pulse-card.ok .pulse-status{color:var(--green);}
-  .pulse-card.watch .pulse-status{color:#B07500;}
-  .pulse-card.alert .pulse-status{color:var(--red);}
-  .section-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--stone);margin:26px 0 10px;display:flex;align-items:center;gap:8px;}
-  .section-label .tag{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;background:var(--stone-light);color:var(--navy);padding:2px 7px;border-radius:5px;text-transform:none;letter-spacing:0;}
-  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-  .kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;min-height:148px;}
-  .kpi-top{display:flex;justify-content:space-between;align-items:flex-start;}
-  .kpi-label{font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.3px;}
-  .kpi-value{font-family:'Space Grotesk',sans-serif;font-size:27px;font-weight:700;margin:10px 0 6px;color:var(--navy);}
-  .kpi-value .unit{font-size:13px;font-weight:600;color:var(--ink-soft);margin-left:3px;}
-  .kpi-sowhat{font-size:11px;color:var(--ink-soft);line-height:1.45;border-top:1px dashed var(--border);padding-top:8px;margin-top:auto;}
-  .kpi-card.warn{border-color:#F0D9A8;background:#FFFBF3;}
-  .kpi-card.crit{border-color:#EFC2BC;background:#FFF7F6;}
-  .kpi-card.empty{background:repeating-linear-gradient(135deg,#fafaf8,#fafaf8 8px,#f2f0eb 8px,#f2f0eb 16px);border:1px dashed var(--stone);}
-  .kpi-card.empty .kpi-value{color:var(--stone);font-size:15px;}
-  .real-tag{font-size:9px;font-weight:700;color:var(--green);background:#E7F6EC;padding:1px 6px;border-radius:4px;letter-spacing:0.3px;}
-  .status-badge{font-size:9px;font-weight:700;padding:1px 7px;border-radius:4px;letter-spacing:0.3px;white-space:nowrap;}
-  .status-badge.real{color:var(--green);background:#E7F6EC;}
-  .status-badge.estimated{color:#946200;background:#FFF3D6;}
-  .status-badge.calculated{color:#1E4A7A;background:#E3F0FF;}
-  .status-badge.forecast{color:#7A3E9D;background:#F3E8FB;}
-  .status-badge.required{color:#7A7A7A;background:#EFEDE8;}
-
-  .header-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;background:var(--navy-deep);border-radius:14px;padding:18px 20px;}
-  .header-summary .hs-item{color:#fff;}
-  .header-summary .hs-label{font-size:10px;text-transform:uppercase;letter-spacing:0.4px;color:#9FB0CC;margin-bottom:5px;}
-  .header-summary .hs-value{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
-  .header-summary .hs-value.small{font-size:12.5px;font-weight:600;line-height:1.4;}
-
-  .level-label{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:var(--navy);display:inline-block;padding:4px 12px;border-radius:20px;margin:28px 0 12px;}
-  .view-tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:700;letter-spacing:0.5px;color:var(--stone);border-bottom:3px solid transparent;transition:all .15s;}
-  .view-tab.active{color:var(--navy);border-bottom-color:var(--navy);}
-  .view-tab:hover:not(.active){color:var(--ink-soft);}
-  .level-label.l2{background:var(--clay);}
-  .level-label.l3{background:#3A5787;}
-  .level-label.l4{background:var(--stone);}
-
-  .impact-card-v2{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
-  .impact-card-v2.red{border-left:5px solid var(--red);}
-  .impact-card-v2.amber{border-left:5px solid var(--amber);}
-  .impact-card-v2.blue{border-left:5px solid var(--blue);}
-  .impact-card-v2.green{border-left:5px solid var(--green);}
-  .icv2-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-  .icv2-issue{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--ink);}
-  .icv2-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;}
-  .icv2-metric{background:var(--bg);border-radius:8px;padding:8px 10px;}
-  .icv2-metric .lbl{font-size:9.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.3px;}
-  .icv2-metric .val{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--navy);margin-top:2px;}
-  .icv2-row{font-size:12px;line-height:1.55;margin-bottom:5px;}
-  .icv2-row b{color:var(--ink);}
-  .icv2-row .rowlabel{color:var(--ink-soft);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.3px;margin-right:6px;}
-
-  .opp-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
-  .opp-rank{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:var(--stone);width:34px;flex-shrink:0;}
-  .opp-body{flex:1;font-size:12.5px;line-height:1.6;}
-  .opp-body .opp-title{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:2px;}
-
-  .decision-card{background:#FFF7F0;border:1px solid #F0D9A8;border-radius:12px;padding:14px 18px;margin-bottom:10px;font-size:12.5px;line-height:1.6;}
-  .decision-card.red{background:#FFF5F4;border-color:#F3B7B0;}
-  .decision-meta{display:flex;gap:18px;margin-top:8px;font-size:11px;color:var(--ink-soft);}
-  .footer-note{margin-top:28px;font-size:11px;color:var(--stone);border-top:1px solid var(--border);padding-top:14px;line-height:1.6;}
-  .trend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  .trend-card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px 10px;}
-  .trend-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
-  .trend-label{font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.3px;}
-  .trend-now{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--navy);}
-  .trend-sub{font-size:10.5px;color:var(--stone);margin-bottom:6px;}
-  .trend-svg-wrap svg{width:100%;height:auto;display:block;}
-  .trend-months{display:flex;justify-content:space-between;font-size:9.5px;color:var(--stone);margin-top:2px;}
-  .impact-card{background:var(--panel);border:1px solid var(--border);border-left:5px solid var(--stone);border-radius:10px;padding:14px 16px;margin-bottom:10px;font-size:13px;line-height:1.55;display:flex;gap:10px;align-items:flex-start;}
-  .impact-card .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
-  .impact-card.green{border-left-color:var(--green);} .impact-card.green .dot{background:var(--green);}
-  .impact-card.amber{border-left-color:var(--amber);} .impact-card.amber .dot{background:var(--amber);}
-  .impact-card.red{border-left-color:var(--red);} .impact-card.red .dot{background:var(--red);}
-  .impact-card.blue{border-left-color:var(--blue);} .impact-card.blue .dot{background:var(--blue);}
-  .impact-card b{font-weight:700;}
-  .about-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:16px;}
-  .about-box h3{font-family:'Space Grotesk',sans-serif;color:var(--navy);font-size:14px;margin:0 0 10px;}
-  .about-box p, .about-box li{font-size:13px;color:var(--ink);line-height:1.6;}
-  .about-box table{width:100%;border-collapse:collapse;font-size:12.5px;}
-  .about-box td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
-  .about-box td:first-child{font-weight:700;color:var(--navy);white-space:nowrap;width:180px;}
-
-  #loginOverlay{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:1000;}
-  .login-box{background:var(--panel);border-radius:16px;padding:36px 34px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-  .login-box .brand-mark{width:32px;height:32px;font-size:15px;border-radius:8px;}
-  .login-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--navy);margin:14px 0 2px;}
-  .login-sub{font-size:12px;color:var(--ink-soft);margin-bottom:20px;}
-  .login-box input{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:10px;font-family:'Inter',sans-serif;}
-  .login-box button{width:100%;padding:11px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-weight:700;font-size:13.5px;cursor:pointer;margin-top:4px;}
-  .login-box button:hover{background:var(--navy-deep);}
-  .login-error{color:var(--red);font-size:12px;margin-top:8px;min-height:16px;}
-  .login-hint{font-size:11px;color:var(--stone);margin-top:16px;line-height:1.6;border-top:1px dashed var(--border);padding-top:12px;}
-
-  .admin-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px;}
-  .admin-table th{background:var(--navy);color:#fff;text-align:left;padding:10px 12px;font-size:11.5px;text-transform:uppercase;letter-spacing:0.3px;}
-  .admin-table td{padding:8px 12px;border-bottom:1px solid var(--border);}
-  .admin-table input{width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12.5px;font-family:'Inter',sans-serif;}
-  .btn-small{padding:6px 12px;border-radius:6px;border:none;font-size:11.5px;font-weight:700;cursor:pointer;}
-  .btn-save{background:var(--green);color:#fff;}
-  .btn-del{background:var(--red);color:#fff;margin-left:6px;}
-  .btn-add{background:var(--navy);color:#fff;padding:9px 16px;border-radius:8px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;margin-top:12px;}
-  .admin-msg{font-size:12px;margin-top:10px;min-height:16px;}
-  .admin-msg.ok{color:var(--green);} .admin-msg.err{color:var(--red);}
-  .locked-note{background:var(--panel);border:1px dashed var(--stone);border-radius:12px;padding:24px;text-align:center;color:var(--stone);font-size:13px;}
-
-  .export-btn{margin-top:8px;background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:7px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;text-align:left;width:100%;display:flex;align-items:center;gap:7px;}
-  .mlabel{font-size:10px;font-weight:700;color:var(--stone);text-transform:uppercase;}
-  .minput{padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:12.5px;}
-  .manual-tab{transition:all .15s;}
-  .export-btn:hover{background:rgba(255,255,255,0.14);}
-  .manager-kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:8px;}
-  .manager-kpi-card{background:#fff;border:1px solid var(--border);border-top:4px solid var(--stone);border-radius:10px;padding:12px 11px;min-height:142px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;transition:.18s ease;}
-  .manager-kpi-card:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(31,56,100,.12);}
-  .manager-kpi-card .mk-title{font-size:12.5px;font-weight:800;line-height:1.35;color:var(--navy);}
-  .manager-kpi-card .mk-value{font-size:24px;font-weight:800;color:var(--navy);margin:9px 0 3px;line-height:1.1;}
-  .manager-kpi-card .mk-meta{font-size:11px;line-height:1.45;color:var(--stone);}
-  .manager-kpi-card .mk-weight{font-size:10px;font-weight:800;color:var(--ink-soft);margin-top:8px;}
-  .monthly-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0;}
-  .monthly-stat{background:var(--navy-deep);color:#fff;border-radius:10px;padding:13px 15px;}
-  .monthly-stat .ms-label{font-size:10px;color:#AFC0DA;text-transform:uppercase;letter-spacing:.6px;font-weight:700;}
-  .monthly-stat .ms-value{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;line-height:1.15;margin-top:5px;}
-  .monthly-stat .ms-note{font-size:10.5px;color:#CDD7E7;margin-top:4px;}
-  .management-table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 3px 12px rgba(31,56,100,.05);}
-  .management-table{width:100%;min-width:1120px;border-collapse:collapse;font-size:12px;}
-  .management-table th{background:var(--navy);color:#fff;text-align:left;padding:11px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap;}
-  .management-table td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle;line-height:1.4;}
-  .management-table tr:last-child td{border-bottom:none;}
-  .management-table tr:hover td{background:#FAF8F4;}
-  .management-table .mt-kpi{font-size:13px;font-weight:800;color:var(--navy);min-width:190px;}
-  .management-table .mt-number{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:800;color:var(--navy);white-space:nowrap;}
-  .management-table .mt-weight{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:800;text-align:center;white-space:nowrap;}
-  .management-table .mt-action{min-width:230px;font-weight:600;}
-  .management-table .mt-pic{min-width:135px;font-weight:700;}
-  .monthly-note{font-size:11px;color:var(--stone);margin-top:8px;line-height:1.5;}
-  @media(max-width:1180px){.manager-kpi-grid{grid-template-columns:repeat(3,1fr);}}
-  @media(max-width:720px){.manager-kpi-grid{grid-template-columns:repeat(2,1fr);}.monthly-stat-grid{grid-template-columns:1fr;}}
-  .offline-banner{background:#7A5300;color:#fff;font-size:12.5px;font-weight:600;padding:10px 16px;border-radius:10px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  @media print{
-    .sidebar, #detailModalOverlay, #loginOverlay, .filters, .export-btn, .logout-btn, .btn-primary, .dropzone, .upload-tab, .manual-tab, #manualFormBox, #rangePickerBox, #rangePickerLabel, #viewTabsWrap { display:none !important; }
-    .app{display:block !important;}
-    .main{padding:10px !important;}
-    body{background:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .kpi-card, .impact-card-v2, .pulse-card, .trend-card, .opp-card, .decision-card, .header-summary { break-inside:avoid; }
-    .level-label { break-before:page; }
-    .level-label:first-of-type { break-before:auto; }
-    .page:not(.active){ display:none !important; }
-    .kpi-grid, .pulse, .trend-grid { display:grid !important; }
-    svg { max-width:100% !important; }
-  }
-
-  .dropzone{background:var(--panel);border:2px dashed var(--border);border-radius:14px;padding:44px 24px;text-align:center;cursor:pointer;transition:all .15s;}
-  .dropzone:hover, .dropzone.dragover{border-color:var(--navy);background:var(--stone-light);}
-  .dropzone .icon{font-size:34px;margin-bottom:10px;}
-  .dropzone .title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--navy);margin-bottom:4px;}
-  .dropzone .sub{font-size:12px;color:var(--ink-soft);}
-  .upload-actions{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
-  .btn-outline{background:var(--panel);border:1px solid var(--navy);color:var(--navy);padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;}
-  .btn-outline:hover{background:var(--stone-light);}
-  .btn-primary{background:var(--navy);border:none;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
-  .btn-primary:hover{background:var(--navy-deep);}
-  .btn-primary:disabled{background:var(--stone);cursor:not-allowed;}
-  .warn-box{border-radius:10px;padding:12px 16px;margin-bottom:10px;font-size:12.5px;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
-  .warn-box.error{background:#FFF5F4;border:1px solid #F3B7B0;color:#8A2318;}
-  .warn-box.warn{background:#FFFBF0;border:1px solid #F0D9A8;color:#7A5300;}
-  .warn-box.info{background:#EFF5FF;border:1px solid #BFD6F5;color:#1E4A7A;}
-  .preview-table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:12.5px;margin-bottom:16px;}
-  .preview-table th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-size:10.5px;text-transform:uppercase;}
-  .preview-table td{padding:7px 10px;border-bottom:1px solid var(--border);}
-  .preview-table tr.row-error{background:#FFF5F4;}
-  .preview-table tr.row-warn{background:#FFFBF0;}
-  .diff-up{color:var(--green);font-weight:700;}
-  .diff-down{color:var(--red);font-weight:700;}
-  .diff-same{color:var(--stone);}
-  .row-status{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;}
-  .row-status.ok{background:#E7F6EC;color:var(--green);}
-  .row-status.err{background:#FFE9E7;color:var(--red);}
-  .upload-log-item{font-size:11.5px;color:var(--ink-soft);padding:8px 0;border-bottom:1px solid var(--border);}
-
-  .detail-link{color:var(--clay);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
-  .detail-link:hover{color:var(--navy);}
-  #detailModalOverlay{position:fixed;inset:0;background:rgba(21,40,69,0.55);display:none;align-items:center;justify-content:center;z-index:900;}
-  #detailModalOverlay.show{display:flex;}
-  .detail-modal{background:var(--panel);border-radius:14px;width:420px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
-  .detail-modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
-  .detail-modal-head h3{font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--navy);margin:0;}
-  .detail-modal-head .sub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
-  .detail-modal-close{background:none;border:none;font-size:18px;color:var(--stone);cursor:pointer;line-height:1;padding:4px;}
-  .detail-modal-body{padding:16px 22px 22px;}
-  .detail-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
-  .detail-row:last-child{border-bottom:none;}
-  .detail-row .label{color:var(--ink-soft);}
-  .detail-row .value{font-weight:700;color:var(--navy);font-family:'IBM Plex Mono',monospace;}
-  .detail-row.total{margin-top:6px;padding-top:12px;border-top:2px solid var(--navy);}
-  .detail-row.total .value{font-size:15px;}
-  .detail-section-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--stone);margin:14px 0 4px;}
-</style>
-<style>
-  /* Aplikasi ini berdiri sendiri: tidak ada sidebar dashboard, jadi kontennya full-width. */
-  .app-solo{max-width:1400px;margin:0 auto;padding:22px 26px 60px;}
-  .solo-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-    background:var(--navy-deep);color:#fff;padding:14px 22px;border-radius:0 0 14px 14px;margin-bottom:20px;
-    box-shadow:inset 0 -3px 0 var(--roman-yellow);}
-  .solo-head .sh-left{display:flex;align-items:center;gap:12px;}
-  .solo-head h1{margin:0;font-family:'Space Grotesk',sans-serif;font-size:16px;letter-spacing:.3px;}
-  .solo-head p{margin:2px 0 0;font-size:11.5px;color:#AFC0DA;}
-  .solo-link{background:rgba(255,255,255,.10);color:#fff;border:none;border-radius:8px;padding:8px 13px;
-    font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}
-  .solo-link:hover{background:rgba(255,255,255,.18);}
-  #page-breakage{display:block !important;}
+:root{--navy:#062b61;--navy2:#001c43;--blue:#0b4fab;--yellow:#ffcc19;--bg:#f6f8fb;--panel:#fff;--ink:#0f2447;--muted:#6f7b91;--line:#dfe5ee;--green:#079455;--red:#e53935;--amber:#f59e0b;--purple:#7a35b1;--soft:#eef4fd;--shadow:0 8px 28px rgba(15,36,71,.08)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input,select,textarea{font:inherit}.hidden{display:none!important}
+button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:245px 1fr}.sidebar{background:linear-gradient(180deg,#001d46,#062f62);color:#fff;padding:18px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}.brand{display:flex;gap:11px;align-items:center;padding:0 8px 16px}.brand-title{font-weight:800;font-size:18px;line-height:1.15}.tag{display:inline-block;font-size:10px;font-weight:800;color:#ffcf24;border:1px solid #ffcf24;border-radius:5px;padding:3px 6px;margin-top:7px}.roman{width:58px;height:46px;flex:none}.oper-note{margin:4px 0 16px;background:#07529b;border-radius:10px;padding:14px 12px;font-size:11px;line-height:1.5}.oper-note b{display:block;font-size:13px;margin-bottom:4px}.nav{display:flex;flex-direction:column;gap:4px}.nav button{border:0;background:transparent;color:#fff;text-align:left;padding:12px 13px;border-radius:7px;font-weight:650;display:flex;gap:10px;align-items:center}.nav button.active{background:rgba(255,255,255,.14)}.nav button:hover{background:rgba(255,255,255,.09)}.side-bottom{margin-top:auto;background:rgba(255,255,255,.08);border-radius:10px;padding:12px;font-size:11px;line-height:1.5}.side-bottom b{font-size:12px}.main{min-width:0}.topbar{height:57px;background:linear-gradient(90deg,#001b3e,#052b5c);color:#fff;display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:0 20px;position:sticky;top:0;z-index:40}.topbar .who{font-size:13px;font-weight:800;margin-right:5px}.topbtn{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;padding:8px 13px;border-radius:7px;font-weight:700}.content{padding:22px 26px 34px}.head h1{margin:0;font-size:25px}.head-sub{font-size:12px;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap;margin-top:7px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0}.ctrl{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:8px;min-height:42px;padding:0 12px;gap:8px}.ctrl label{font-size:11px;color:var(--muted);font-weight:700}.ctrl select{border:0;outline:0;background:transparent;font-weight:700;color:var(--ink)}.seg{display:flex;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}.seg button{border:0;background:#fff;color:var(--ink);padding:11px 17px;font-weight:700}.seg button.active{background:var(--navy);color:#fff}.spacer{flex:1}.primary{border:0;background:linear-gradient(90deg,#07367a,#003070);color:#fff;border-radius:8px;padding:11px 18px;font-weight:800;box-shadow:0 4px 10px rgba(0,48,112,.14)}.secondary{border:1px solid #6e91bd;background:#fff;color:var(--navy);border-radius:8px;padding:10px 15px;font-weight:800}.danger{border:1px solid #f5b9b6;background:#fff;color:#bd2c28;border-radius:8px;padding:10px 15px;font-weight:800}.page{display:none}.page.active{display:block}.grid-kpi{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:10px}.card{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 10px rgba(15,36,71,.02)}.kpi{padding:14px}.kpi .label{font-size:12px;font-weight:800}.kpi .sub{font-size:10px;color:var(--muted);margin-top:2px}.kpi .value{font-size:27px;font-weight:850;margin:12px 0 4px;color:#071a39}.kpi .unit{font-size:11px;font-weight:700}.kpi .foot{font-size:10.5px;color:var(--muted);margin-top:7px}.mini-targets{display:flex;gap:6px;margin-top:9px}.mini-targets span{flex:1;text-align:center;padding:6px;border-radius:6px;background:#f8fafc;font-size:10px;font-weight:800}.mini-targets .sep{border:1px solid #f4d69b;color:#b86a00}.mini-targets .oct{border:1px solid #bae6c9;color:#087a45}.good{color:var(--green)!important}.bad{color:var(--red)!important}.warn{color:var(--amber)!important}.datareq{color:var(--amber);font-size:11px;font-weight:800}.configreq{color:var(--amber);font-size:15px;font-weight:850}.status-pill{display:inline-flex;align-items:center;border-radius:16px;padding:4px 10px;font-size:10px;font-weight:800}.s-good{background:#e8f7ef;color:#067647}.s-watch{background:#fff3df;color:#b65f00}.s-bad{background:#fdecec;color:#d92d20}.s-blue{background:#edf4ff;color:#175cd3}.section{margin-top:12px;padding:14px}.section-title{font-size:14px;font-weight:850;margin-bottom:10px;display:flex;align-items:center;gap:8px}.target-matrix{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}.tm-cell{padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:11px}.tm-head{background:#f7f9fc;font-weight:800;text-align:center}.tm-kpi{font-weight:800}.dashboard-body{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:12px}.table-card{padding:0;overflow:hidden}.subtabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:0 12px}.subtabs button{border:0;background:#fff;padding:11px 13px;color:var(--muted);font-weight:750}.subtabs button.active{color:var(--navy);border-bottom:2px solid var(--navy)}.tablewrap{overflow:auto}.tbl{border-collapse:collapse;width:100%;font-size:11px;white-space:nowrap}.tbl th{background:#f5f7fa;color:#33415f;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:10px}.tbl td{padding:8px 10px;border-bottom:1px solid #edf0f5}.tbl tr.national{background:#edf4ff;font-weight:800}.rightcol{display:flex;flex-direction:column;gap:10px}.action-card{padding:14px}.action-row{border:1px solid var(--line);border-radius:8px;padding:11px;margin-top:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}.action-row .n{font-size:20px;font-weight:850}.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.chart{padding:14px;min-height:240px}.chart svg{width:100%;height:190px}.empty{padding:32px;text-align:center;color:var(--muted);font-size:12px}.hint{background:#fff8e8;border:1px solid #f7d899;color:#7b5c14;border-radius:8px;padding:10px 12px;font-size:11px;line-height:1.5}.mobilebar{display:none}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(0,18,46,.58);z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.overlay.show{display:flex}.modal{background:#fff;border-radius:14px;max-width:900px;width:100%;max-height:94vh;overflow:auto;box-shadow:var(--shadow)}.modal-head{position:sticky;top:0;background:linear-gradient(90deg,#002760,#001b42);color:#fff;z-index:3;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}.modal-head h2{margin:0;font-size:17px}.close{border:0;background:rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:7px 10px}.modal-body{padding:18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff}.field label{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.field input,.field select,.field textarea{border:0;outline:0;width:100%;color:var(--ink);background:transparent}.field textarea{min-height:68px;resize:vertical}.readonly{background:#f7f9fc}.span2{grid-column:span 2}.type-tabs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden}.type-tabs button{border:0;background:#fff;padding:12px;font-weight:750;color:#32415c}.type-tabs button.active{background:var(--navy);color:#fff}.cause-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.cause-tabs button{background:#fff;border:1px solid var(--line);border-radius:7px;padding:9px;font-size:11px}.cause-tabs button.active{background:var(--navy);color:#fff}.steps{display:flex;align-items:center;justify-content:center;gap:14px;margin:12px 0 18px}.step{display:flex;gap:7px;align-items:center;font-size:12px;font-weight:750;color:var(--muted)}.step i{width:31px;height:31px;border-radius:50%;border:2px solid #aebbd0;display:flex;align-items:center;justify-content:center;font-style:normal}.step.active{color:var(--ink)}.step.active i{background:var(--navy);border-color:var(--navy);color:#fff}.photo-area{border:1px dashed #93add0;border-radius:9px;padding:12px}.photo-actions{display:flex;gap:8px;align-items:center}.photo-actions label{border:1px dashed #7b9bc5;border-radius:7px;padding:11px 13px;color:var(--navy);font-weight:750;cursor:pointer}.photo-preview{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:9px}.photo-preview .ph{aspect-ratio:1;border:1px solid var(--line);border-radius:7px;background:#f3f5f8;position:relative;overflow:hidden}.photo-preview img{width:100%;height:100%;object-fit:cover}.ph b{position:absolute;top:2px;left:4px;background:#fff;border-radius:50%;width:18px;height:18px;text-align:center;font-size:10px}.errorbox{background:#fff0ef;color:#c42d26;border:1px solid #ffc9c6;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px}.modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;gap:10px;padding:12px 18px}.modal-foot button{flex:1}.target-form .field{background:#fff}.history{max-height:220px;overflow:auto;margin-top:12px}.smallnote{font-size:10.5px;color:var(--muted);line-height:1.5}
+.login{position:fixed;inset:0;z-index:200;background:radial-gradient(circle at 20% 20%,#0b4e91,#001a3b 65%);display:flex;align-items:center;justify-content:center;padding:20px}.login-box{width:360px;background:#fff;border-radius:16px;padding:25px;box-shadow:0 22px 65px rgba(0,0,0,.3)}.login-brand{display:flex;gap:12px;align-items:center;margin-bottom:18px}.login-brand h2{margin:0}.login-box input{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;margin:8px 0}.login-box .primary{width:100%;margin-top:5px}.login-msg{font-size:11px;color:var(--red);margin-top:8px;min-height:16px}
+@media(max-width:1100px){.grid-kpi{grid-template-columns:repeat(3,1fr)}.dashboard-body{grid-template-columns:1fr}.rightcol{display:grid;grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}}
+@media(max-width:760px){body{background:#fff}.app{display:block}.sidebar{display:none}.topbar{height:72px;justify-content:space-between;padding:0 14px;padding-top:env(safe-area-inset-top)}.topbar:before{content:'SLS BREAKAGE MONITORING';font-size:13px;font-weight:850}.topbar .topbtn{display:none}.content{padding:16px 14px 92px}.head h1{font-size:24px}.head-sub{display:block;line-height:1.6}.toolbar{gap:8px}.toolbar .spacer{display:none}.ctrl{flex:1;min-width:140px}.seg{width:100%}.seg button{flex:1}.toolbar .primary{width:100%}.desktop-target{display:none}.grid-kpi{grid-template-columns:1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}.kpi{border:0;border-radius:0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;align-items:center;box-shadow:none}.kpi:last-child{border-bottom:0}.kpi .label,.kpi .sub,.kpi .value,.kpi .foot,.mini-targets{grid-column:1}.kpi .value{font-size:25px;margin:7px 0 2px}.kpi>.status-pill,.kpi>.configreq{grid-column:2;grid-row:1/5;margin-left:10px}.target-matrix{grid-template-columns:1.2fr repeat(4,.9fr);overflow:auto}.section{margin-top:10px}.dashboard-body{display:block}.rightcol{display:block;margin-top:10px}.chart-grid{display:block}.chart{margin-top:10px}.modal{max-height:100vh;height:100%;border-radius:0}.overlay{padding:0;align-items:stretch}.modal-head{padding-top:calc(14px + env(safe-area-inset-top))}.modal-body{padding:14px}.form-grid{grid-template-columns:1fr 1fr}.field.span2{grid-column:span 2}.cause-tabs{grid-template-columns:1fr 1fr}.photo-preview{grid-template-columns:repeat(5,1fr)}.modal-foot{padding-bottom:calc(12px + env(safe-area-inset-bottom))}.mobilebar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:45;padding-bottom:env(safe-area-inset-bottom)}.mobilebar button{border:0;background:#fff;padding:10px 3px;color:#4b5870;font-size:9px;font-weight:700}.mobilebar button.active{background:var(--navy);color:#fff}.mobilebar button span{display:block;font-size:20px;margin-bottom:2px}.rightcol .action-card{margin-top:10px}.login-box{width:100%;max-width:360px}}
 </style>
 </head>
 <body>
-
-<svg width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden;">
-  <symbol id="romanLogo" viewBox="0 0 210 150">
-    <path d="M37 78A68 68 0 0 1 173 78" fill="none" stroke="#ed001b" stroke-width="20"/>
-    <path d="M56 78A49 49 0 0 1 154 78" fill="none" stroke="#ffc20e" stroke-width="10"/>
-    <path d="M55 79h49a37 37 0 0 1 37 37H55z" fill="#ffc20e"/>
-    <path d="M54 78l54 17" fill="none" stroke="#152845" stroke-width="6"/>
-    <circle cx="111" cy="97" r="9" fill="#ed001b" stroke="#152845" stroke-width="5"/>
-    <text x="31" y="142" fill="#ed001b" font-family="Arial Black,Arial,sans-serif" font-size="35" font-weight="900" font-style="italic">ROMAN</text>
-  </symbol>
-</svg>
-
-<div id="loginOverlay">
+<div class="login" id="login">
   <div class="login-box">
-    <svg class="roman-logo" role="img" aria-label="Roman"><use href="#romanLogo"></use></svg>
-    <div class="login-title">SLS Breakage Monitoring</div>
-    <div class="login-sub">Masukkan ID dan password (sama seperti WMS &amp; Dashboard)</div>
-    <input type="text" id="loginId" placeholder="ID pengguna" autocomplete="username" autocapitalize="none" spellcheck="false">
-    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
-    <button id="loginBtn">Masuk</button>
-    <div class="login-error" id="loginError"></div>
-    <div class="login-hint">Aplikasi eksekusi breakage. Ringkasannya tampil di SLS Control Tower sebagai KPI.</div>
+    <div class="login-brand"><div id="loginLogo"></div><div><h2>SLS Breakage Monitoring</h2><div class="smallnote">Aplikasi operasional · database Claw yang sama</div></div></div>
+    <label style="font-size:11px;font-weight:800">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password" />
+    <button class="primary" id="loginBtn">Masuk</button>
+    <div class="login-msg" id="loginMsg"></div>
+    <div class="smallnote" style="margin-top:12px">Login mengikuti akun SLS existing. Scope RDC dan hak akses divalidasi backend.</div>
   </div>
 </div>
-
-<div id="appRoot" style="display:none;">
-  <div class="solo-head">
-    <div class="sh-left">
-      <svg class="roman-logo" role="img" aria-label="Roman"><use href="#romanLogo"></use></svg>
-      <div><h1>SLS BREAKAGE MONITORING</h1>
-      <p>Sistem eksekusi — terpisah dari Control Tower, terhubung lewat database yang sama</p></div>
+<div class="app" id="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand"><div id="sideLogo"></div><div><div class="brand-title">SLS BREAKAGE<br>MONITORING</div><span class="tag">APLIKASI OPERASIONAL</span></div></div>
+    <div class="oper-note"><b>ⓘ Aplikasi Operasional</b>Aktivitas input, monitoring & tindak lanjut dilakukan di sini.<br><br>Control Tower hanya menampilkan hasil utama / data besar.</div>
+    <div class="nav" id="nav">
+      <button class="active" data-page="overview">⌂ Overview</button>
+      <button data-page="rekap">▥ Rekap & Trend</button>
+      <button data-page="incident">⚠ Incident</button>
+      <button data-page="reconcile">▤ Monthly Reconciliation</button>
+      <button data-page="target" id="navTarget">◎ Target KPI</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <span class="badge-role" id="roleBadge" style="font-size:11px;"></span>
-      <button class="solo-link" id="openDashboardBtn">Control Tower ↗</button>
-      <button class="solo-link" id="logoutBtn">⎋ Keluar</button>
-    </div>
-  </div>
-  <div class="app-solo">
-    <div id="page-breakage" class="page">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
-        <div>
-          <h2 style="margin:0;font-size:17px;color:var(--navy);">Monitoring Breakage Nasional</h2>
-          <div style="font-size:12px;color:var(--stone);">Pilih periode, lalu telusuri lewat empat tab di bawah.</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <select id="nbcPeriod" style="font-size:12px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);"></select>
-          <button class="export-btn" id="nbcDownload" style="padding:6px 10px;font-size:11.5px;">⬇ Download</button>
-          <button class="btn-primary" id="nbcOpenInput" style="padding:7px 14px;font-size:12px;">+ Input Breakage</button>
-        </div>
+    <div class="side-bottom"><b>Breakage Control</b><br>Daily Incident → Weekly Review → Monthly Reconciliation → Management Result</div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div class="who" id="who">—</div><button class="topbtn" id="ctBtn">▥ Control Tower</button><button class="topbtn" id="logoutBtn">⇥ Keluar</button></header>
+    <div class="content">
+      <div class="head"><h1 id="pageTitle">Monitoring Breakage Nasional</h1><div class="head-sub"><span>↔ Data operasional harian — diinput SPV RDC berdasarkan laporan team lapangan.</span><span>▣ Target KPI dapat diatur & direvisi oleh Master.</span><span>ⓘ Dashboard hanya menampilkan hasil utama / data besar.</span></div></div>
+      <div class="toolbar">
+        <div class="ctrl">▣ <label>Periode</label><select id="period"></select></div>
+        <div class="seg" id="gran"><button data-g="daily">Harian</button><button data-g="weekly">Mingguan</button><button class="active" data-g="monthly">Bulanan</button></div>
+        <div class="ctrl" id="scopeCtrl"><label>Scope</label><select id="scope"><option value="ALL">Nasional</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
+        <div class="ctrl hidden" id="windowCtrl"><label>Target Window</label><select id="windowSel"></select></div>
+        <span class="spacer"></span>
+        <button class="primary" id="inputBtn">＋ Input Breakage</button>
+        <button class="secondary desktop-target" id="targetBtn">◎ Input / Revisi Target KPI</button>
       </div>
-      <div style="display:flex;gap:4px;border-bottom:1px solid var(--border);margin:14px 0;">
-        <div class="nbc-tab active" data-nbc="overview">Overview</div>
-        <div class="nbc-tab" data-nbc="rekap">Rekap &amp; Trend</div>
-        <div class="nbc-tab" data-nbc="incident">Incident</div>
-        <div class="nbc-tab" data-nbc="reconcile">Monthly Reconciliation</div>
-      </div>
-      <div id="nbc-overview" class="nbc-page active"></div>
-      <div id="nbc-rekap" class="nbc-page"></div>
-      <div id="nbc-incident" class="nbc-page"></div>
-      <div id="nbc-reconcile" class="nbc-page"></div>
 
-      <!-- Input Breakage: an ACTION (guided upload wizard), separate from the monitoring tabs above -->
-      <div id="nbcInputModal" style="display:none;position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:200;">
-        <div style="max-width:820px;margin:40px auto;background:#fff;border-radius:12px;padding:20px;max-height:88vh;overflow-y:auto;position:relative;">
-          <button id="nbcCloseInputX" aria-label="Tutup"
-            style="position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;
-            border:1px solid var(--border);background:#fff;color:var(--ink-soft);font-size:15px;
-            font-weight:700;cursor:pointer;line-height:1;z-index:2;">✕</button>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-right:40px;">
-            <div style="font-weight:700;font-size:15px;color:var(--navy);">Input Breakage — Upload SAP MB51</div>
-            <button id="nbcCloseInput"
-              style="flex:none;width:auto;text-align:center;background:#F0EEE8;color:var(--navy);
-              border:none;border-radius:7px;padding:7px 14px;font-size:11.5px;font-weight:700;cursor:pointer;">✕ Tutup</button>
+      <section class="page active" id="page-overview">
+        <div class="grid-kpi" id="kpis"></div>
+        <div class="card section" id="targetWindow"></div>
+        <div class="dashboard-body">
+          <div>
+            <div class="card table-card" id="scorecard"></div>
+            <div class="chart-grid"><div class="card chart" id="trendChart"></div><div class="card chart" id="scoreChart"></div></div>
           </div>
-          <div id="nbc-upload"></div>
+          <div class="rightcol"><div class="card action-card" id="actions"></div></div>
         </div>
-      </div>
+      </section>
+      <section class="page" id="page-rekap"><div class="card section" id="rekapBody"></div></section>
+      <section class="page" id="page-incident"><div class="card section" id="incidentBody"></div></section>
+      <section class="page" id="page-reconcile"><div class="card section" id="reconBody"></div></section>
+      <section class="page" id="page-target"><div class="card section" id="targetBody"></div></section>
     </div>
-  </div>
+  </main>
+</div>
+<div class="mobilebar" id="mobilebar">
+  <button class="active" data-page="overview"><span>⌂</span>Overview</button><button data-page="rekap"><span>▥</span>Rekap</button><button data-page="incident"><span>⚠</span>Incident</button><button data-page="target"><span>◎</span>Target</button><button data-page="reconcile"><span>•••</span>Menu</button>
 </div>
 
+<!-- incident modal -->
+<div class="overlay" id="incidentModal"><div class="modal">
+  <div class="modal-head"><div style="display:flex;gap:10px;align-items:center"><div id="modalLogo"></div><div><h2>Input Breakage</h2><div id="inputIdentity" style="font-size:11px;opacity:.85"></div></div></div><button class="close" data-close="incidentModal">✕</button></div>
+  <div class="modal-body">
+    <div class="smallnote">Input berdasarkan laporan team lapangan <span style="float:right;color:#079455;font-weight:800" id="draftStatus">☁ Draft otomatis tersimpan</span></div>
+    <div class="form-grid" style="margin-top:12px"><div class="field readonly"><label>RDC (otomatis)</label><input id="fRdc" disabled></div><div class="field readonly"><label>Input By (otomatis)</label><input id="fInputBy" disabled></div></div>
+    <div class="steps"><div class="step active"><i>1</i>Kejadian</div><div class="step"><i>2</i>Detail</div><div class="step"><i>3</i>Evidence</div></div>
+    <div class="field span2"><label>Jenis Kejadian *</label><div class="type-tabs" id="typeTabs"><button data-type="receiving">▧ Penerimaan</button><button data-type="delivery" class="active">▣ Pengiriman</button><button data-type="warehouse">⌂ Gudang</button></div><div class="hint" style="margin-top:10px">Receiving dicatat sebagai qty/control volume; tidak otomatis masuk Delivery/Warehouse Rate.</div></div>
+    <div class="form-grid" style="margin-top:10px">
+      <div class="field"><label>Tanggal Kejadian *</label><input type="date" id="fDate"></div><div class="field"><label>No BA *</label><input id="fBa" placeholder="Contoh: BA/JK/0926/001"></div>
+      <div class="field"><label>Kode Item *</label><input id="fItem" placeholder="Cari kode atau nama item"></div><div class="field"><label>Qty *</label><div style="display:flex"><input type="number" min="0.01" step="0.01" id="fQty" placeholder="Masukkan jumlah"><b style="font-size:11px;padding:4px">BOX</b></div></div>
+      <div class="field span2"><label>Reported By (Nama Team Lapangan) *</label><input id="fReported" placeholder="Masukkan nama pelapor"></div>
+    </div>
+    <div id="conditional" style="margin-top:10px"></div>
+    <div class="field" style="margin-top:10px"><label>Penyebab *</label><div class="cause-tabs" id="causeTabs"><button data-cause="Perjalanan" class="active">Perjalanan</button><button data-cause="Susunan">Susunan</button><button data-cause="Packaging / Pallet">Packaging / Pallet</button><button data-cause="Lainnya">Lainnya</button></div><textarea id="fCauseDetail" placeholder="Keterangan penyebab / kejadian secara singkat" maxlength="300" style="margin-top:8px"></textarea></div>
+    <div class="photo-area" style="margin-top:10px"><b style="font-size:12px">Evidence (Foto 1–5 wajib)</b><div class="smallnote">Foto disimpan sebagai evidence incident.</div><div class="photo-actions"><label for="fPhotos">▣ Ambil Foto / Pilih dari Galeri</label><input type="file" id="fPhotos" accept="image/jpeg,image/png" multiple capture="environment" hidden></div><div class="photo-preview" id="photoPreview"></div></div>
+    <div class="errorbox hidden" id="inputMsg"></div>
+  </div>
+  <div class="modal-foot"><button class="secondary" id="saveDraft">▣ Simpan Draft</button><button class="primary" id="submitIncident">→ Review & Submit</button></div>
+</div></div>
+
+<!-- target modal -->
+<div class="overlay" id="targetModal"><div class="modal" style="max-width:760px"><div class="modal-head"><h2>Input / Revisi Target KPI</h2><button class="close" data-close="targetModal">✕</button></div><div class="modal-body target-form">
+  <div class="hint">Hanya Master dapat mengubah target. Revisi tidak menghapus target lama; sistem menyimpan version, waktu, user, alasan, dan target yang digantikan.</div>
+  <div class="form-grid" style="margin-top:12px">
+    <div class="field"><label>KPI</label><select id="tKpi"><option value="delivery">Delivery Breakage Rate</option><option value="warehouse">Warehouse Breakage Rate</option></select></div>
+    <div class="field"><label>Scope</label><select id="tScope"><option value="ALL">Nasional / All RDC</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
+    <div class="field"><label>Periode</label><select id="tPeriod"><option value="2026-09">September 2026</option><option value="2026-10">Oktober 2026</option></select></div>
+    <div class="field"><label>Window</label><select id="tWindow"></select></div>
+    <div class="field"><label>Target Rate / 10.000</label><input type="number" step="0.01" id="tValue"></div>
+    <div class="field"><label>Objective</label><input id="tObjective" placeholder="Contoh: 25% recovery of gap"></div>
+    <div class="field span2"><label>Alasan Revisi *</label><textarea id="tReason" placeholder="Alasan perubahan target wajib diisi"></textarea></div>
+  </div>
+  <div id="targetMsg" class="errorbox hidden"></div>
+  <div class="history"><div class="section-title">Riwayat Revisi</div><div id="targetHistory"></div></div>
+</div><div class="modal-foot"><button class="secondary" data-close="targetModal">Batal</button><button class="primary" id="saveTarget">Simpan Target / Revisi</button></div></div></div>
+
+<!-- reconciliation modal -->
+<div class="overlay" id="reconModal"><div class="modal"><div class="modal-head"><h2>Monthly Reconciliation — SAP MB51</h2><button class="close" data-close="reconModal">✕</button></div><div class="modal-body" id="reconWizard"></div></div></div>
 <script>
-const DASHBOARD_APP_URL = 'https://sls-supply-chain-control-tower.vercel.app/';
-const SUPABASE_URL = 'https://mfdckngkvjnemwgmkiiv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
-
-// SLS-AUTH: real Supabase Auth session (JWT), established after login. Used instead of the bare anon key
-// whenever available so PostgREST/RLS can see who's actually calling — but every function below falls back
-// to the anon key if no session exists yet, so nothing here can break the app before login completes.
-let AUTH_SESSION = null;
-let AUTH_SESSION_OK = false;
-function authHeader(){
-  return AUTH_SESSION && AUTH_SESSION.access_token ? AUTH_SESSION.access_token : SUPABASE_ANON_KEY;
-}
-let AUTH_SESSION_ERROR = '';
-async function establishAuthSession(password, username){
-  AUTH_SESSION_ERROR = '';
-  try{
-    const emailRes = username
-      ? await sbRpc('get_login_email', {input_username: username, input_password: password})
-      : await sbRpc('get_login_email', {input_password: password});
-    if(!emailRes){ AUTH_SESSION_ERROR = 'get_login_email tidak menemukan akun (hasil kosong).'; return false; }
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method:'POST',
-      headers:{ 'apikey':SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ email: emailRes, password })
-    });
-    if(!res.ok){
-      let bodyText = '';
-      try{ bodyText = await res.text(); }catch(e){}
-      AUTH_SESSION_ERROR = `HTTP ${res.status} dari /auth/v1/token — ${bodyText.slice(0,200)}`;
-      return false;
-    }
-    const data = await res.json();
-    if(!data.access_token){ AUTH_SESSION_ERROR = 'Respons token tidak berisi access_token: ' + JSON.stringify(data).slice(0,200); return false; }
-    AUTH_SESSION = { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: Date.now() + (data.expires_in||3600)*1000 };
-    return true;
-  }catch(e){ AUTH_SESSION_ERROR = 'Exception: ' + (e && e.message ? e.message : String(e)); console.warn('SLS-AUTH: gagal membangun sesi aman, lanjut pakai mode lama.', e); return false; }
-}
-
-async function sbRpc(fn, params){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-    method:'POST',
-    headers:{ 'apikey':SUPABASE_ANON_KEY, 'Authorization':`Bearer ${authHeader()}`, 'Content-Type':'application/json' },
-    body: JSON.stringify(params)
-  });
-  if(!res.ok){ const t = await res.text(); throw new Error(t); }
-  return res.json();
-}
-async function sbSelect(table, query=''){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${query}`, {
-    headers:{ 'apikey':SUPABASE_ANON_KEY, 'Authorization':`Bearer ${authHeader()}` }
-  });
-  if(!res.ok){ const t = await res.text(); throw new Error(t); }
-  return res.json();
-}
-let CURRENT_PASSWORD = '';
-let CURRENT_USERNAME = '';
-let CURRENT_ROLE = '';
-let CURRENT_RDC_SCOPE = null;
-let CURRENT_RDC = 'Semua';   // aplikasi ini tidak punya selector RDC; master = ALL, RDC = scope-nya
-function fmtNum(v){ if(v==null) return '-'; if(Math.abs(v)>=1000) return Math.round(v).toLocaleString('id-ID'); return v; }
-function statusIcon(status){ return {red:'🔴',amber:'🟡',blue:'🔵',green:'🟢'}[status]||'⚪'; }
-
-// ============ NATIONAL BREAKAGE CONTROL (v43 module — Quality/Breakage) ============
-// Numerator/denominator are always summed separately across RDC scope, never averaged
-// as pre-baked rates — matches Fang's "SUM/SUM, JANGAN average rate RDC" requirement.
-let NBC_PERIOD = null;
-function esc(s){ return String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-
-function populateNbcPeriods(){
-  const sel = document.getElementById('nbcPeriod');
-  if(!sel) return;
-  const now = new Date();
-  const opts = [];
-  for(let i=0;i<12;i++){
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    const val = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    opts.push(`<option value="${val}">${d.toLocaleDateString('id-ID',{month:'long',year:'numeric'})}</option>`);
-  }
-  sel.innerHTML = opts.join('');
-  NBC_PERIOD = sel.value;
-  sel.addEventListener('change', ()=>{ NBC_PERIOD = sel.value; renderNbcOverview(); });
-}
-
-document.querySelectorAll('.nbc-tab').forEach(t=>{
-  t.addEventListener('click', ()=>{
-    document.querySelectorAll('.nbc-tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.nbc-page').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('nbc-'+t.dataset.nbc).classList.add('active');
-    if(t.dataset.nbc==='rekap') renderNbcRekapTrend();
-    if(t.dataset.nbc==='incident') renderNbcRootCause();
-    if(t.dataset.nbc==='reconcile') renderNbcReconciliationHistory();
-  });
-});
-document.getElementById('nbcOpenInput').addEventListener('click', ()=>{
-  document.getElementById('nbcInputModal').style.display = 'block';
-  renderNbcUploadStep1();
-});
-function closeNbcInputModal(){ document.getElementById('nbcInputModal').style.display = 'none'; }
-document.getElementById('nbcCloseInput').addEventListener('click', closeNbcInputModal);
-document.getElementById('nbcCloseInputX').addEventListener('click', closeNbcInputModal);
-document.getElementById('nbcInputModal').addEventListener('click', (e)=>{
-  if(e.target.id === 'nbcInputModal') closeNbcInputModal(); // klik area gelap di luar kotak putih
-});
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && document.getElementById('nbcInputModal').style.display === 'block') closeNbcInputModal();
-});
-
-function nbcRateCardHtml(title, sub, m, unit){
-  if(m.rate == null){
-    return `<div class="nbc-rate-card">
-      <div class="lbl">${title}</div>
-      <div class="val" style="font-size:15px;color:var(--stone);">DATA REQUIRED</div>
-      <div style="font-size:11.5px;color:var(--stone);">${sub} — denominator belum tersedia untuk periode ini.</div>
-    </div>`;
-  }
-  const gapUp = m.gap > 0;
-  const trendKnown = m.trend_pct != null;
-  return `<div class="nbc-rate-card">
-    <div class="lbl">${title}</div>
-    <div class="val">${m.rate}<small> / 10.000 ${unit}</small></div>
-    <div style="font-size:11px;color:var(--stone);">${sub}</div>
-    <div class="nbc-rate-row">
-      <span>Target Final: <b>${m.target_final}</b></span>
-      <span class="${gapUp?'nbc-gap-up':'nbc-gap-down'}">${gapUp?'▲':'▼'} Gap ${gapUp?'+':''}${m.gap} (${gapUp?'+':''}${m.gap_pct}%)</span>
-    </div>
-    ${trendKnown ? `<div class="nbc-rate-row"><span>Trend vs bulan lalu</span>
-      <span class="${m.trend_pct>0?'nbc-gap-up':'nbc-gap-down'}">${m.trend_pct>0?'▲':'▼'} ${Math.abs(m.trend_pct)}%</span></div>` : ''}
-  </div>`;
-}
-
-async function renderNbcOverview(){
-  const el = document.getElementById('nbc-overview');
-  if(!el || !NBC_PERIOD) return;
-  el.innerHTML = '<div class="nbc-placeholder">⏳ Memuat data breakage nasional…</div>';
-  try{
-    const scopeRdc = CURRENT_RDC_SCOPE || (CURRENT_RDC && CURRENT_RDC!=='Semua' ? CURRENT_RDC : 'ALL');
-    const d = await sbRpc('breakage_overview', { p_period: NBC_PERIOD, p_rdc: scopeRdc });
-    const totalKnown = d.delivery.rate != null || d.warehouse.rate != null;
-    el.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;margin-bottom:14px;">
-        ${nbcRateCardHtml('Delivery Breakage Rate', 'Pecah Kiriman', d.delivery, 'Delivered Box')}
-        ${nbcRateCardHtml('Warehouse Breakage Rate', 'Pecah Pallet/Gudang', d.warehouse, 'Stock Exposure')}
-        <div class="nbc-rate-card" style="min-width:130px;">
-          <div class="lbl">Total Breakage (${d.period})</div>
-          <div class="val">${totalKnown?fmtNum(d.total_breakage_box):'—'}<small> Box</small></div>
-          <div style="font-size:11.5px;color:var(--stone);margin-top:6px;">RDC Above Target</div>
-          <div style="font-size:15px;font-weight:700;color:var(--navy);">${d.rdc_above_target} / ${d.rdc_count} RDC</div>
-        </div>
-      </div>
-      ${d.delivery.rate!=null ? `
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:14px;margin-bottom:14px;">
-        ${nbcTargetProgress('Delivery Breakage', d.delivery)}
-        ${nbcTargetProgress('Warehouse Breakage', d.warehouse)}
-        <div class="nbc-rate-card" style="min-width:170px;">
-          <div class="lbl">RDC Highlight</div>
-          <div style="font-size:12px;margin-top:8px;line-height:1.9;">
-            <div>Worst RDC: <b style="color:var(--red);">${esc(d.worst_rdc||'-')}</b></div>
-            <div>Best RDC: <b style="color:var(--green);">${esc(d.best_rdc||'-')}</b></div>
-          </div>
-        </div>
-      </div>` : ''}
-      <div style="background:#F7F5F1;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.6;">
-        <b>Management Insight —</b> ${esc(d.insight)}
-      </div>`;
-  }catch(e){
-    el.innerHTML = `<div class="nbc-placeholder" style="background:#FCEBE9;color:#B3261E;">Gagal memuat: ${esc(e.message)}</div>`;
-  }
-}
-function nbcTargetProgress(title, m){
-  const pct = m.recovery_pct==null ? 0 : Math.min(100, Math.max(0, m.recovery_pct));
-  return `<div class="nbc-rate-card">
-    <div class="lbl">${title} — Target Progress</div>
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--stone);margin-top:8px;">
-      <span>Baseline<br><b style="font-size:13px;color:var(--ink);">${m.baseline}</b></span>
-      <span>Interim (12 mgg)<br><b style="font-size:13px;color:var(--ink);">≤${m.interim}</b></span>
-      <span>Final<br><b style="font-size:13px;color:var(--ink);">≤${m.target_final}</b></span>
-    </div>
-    <div style="background:var(--border);border-radius:4px;height:6px;margin:10px 0 4px;overflow:hidden;">
-      <div style="background:${pct>=100?'var(--green)':'var(--clay)'};height:100%;width:${pct}%;"></div>
-    </div>
-    <div style="font-size:11px;color:var(--stone);">Current <b>${m.rate}</b> · Recovery ${m.recovery_pct!=null?m.recovery_pct+'%':'-'}</div>
-  </div>`;
-}
-
-// Menus 2-4: not built yet this phase — shown honestly, not hidden or faked.
-function renderNbcPlaceholders(){
-  // rekap & root now render live content on first tab click (see tab-click hook above);
-  // nothing to pre-fill here anymore.
-}
-document.getElementById('nbcDownload')?.addEventListener('click', ()=>{
-  alert('Download Excel/PDF untuk module ini akan tersedia setelah Menu 2-4 selesai dibangun (data yang diekspor harus berasal dari sumber yang sama dengan yang ditampilkan).');
-});
-
-// NOTE: NBC (National Breakage Control) is now its own standalone page (#page-breakage),
-// initialized by loadBreakagePage() below — NOT auto-rendered on every dashboard render.
-
-
-
-// ============ MENU 4: UPLOAD & RECONCILIATION ============
-// Extends the EXISTING parseMB51Pecah pattern (same column detection, same plate/pallet regex
-// already verified against real Jakarta Jan-Jul 2026 data) — this time keeping row-level detail
-// instead of discarding it after aggregation, and classifying into the 10 Pareto sub-categories.
-const PLATE_RE_V43 = /\b[A-Z]{1,2}\s?\d{3,5}\s?[A-Z]{1,3}\b/;
-function classifySubCategory(dht, mvt){
-  const t = String(dht||'').toUpperCase();
-  if(PLATE_RE_V43.test(t)) return {main:'delivery', sub:'Transport'};
-  if(mvt==='602') return {main:'delivery', sub:'Loading'};
-  if(/PECAH/.test(t) && /PALET|PALLET/.test(t)) return {main:'warehouse', sub:'Packaging / Pallet'};
-  if(/PERSIAPAN/.test(t)) return {main:'warehouse', sub:'Handling / Picking'};
-  if(/PERAPIHAN/.test(t)) return {main:'warehouse', sub:'Storage / Penyimpanan'};
-  if(/\bSO\b|STOCK OPNAME/.test(t)) return {main:'warehouse', sub:'Storage / Penyimpanan'};
-  if(/GUDANG/.test(t)) return {main:'warehouse', sub:'Storage / Penyimpanan'};
-  if(/SELISIH SERI/.test(t)) return {main:'warehouse', sub:'Unknown'};
-  if(t.trim()==='') return {main:'warehouse', sub:'Unknown'};
-  return {main:'warehouse', sub:'Other'};
-}
-function parseMB51EventDetail(wb){
-  const sheetName = wb.SheetNames.find(n=>{
-    const g = XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, defval:null});
-    const h = (g[0]||[]).map(x=>String(x||'').trim());
-    return h.includes('Posting Date') && h.includes('Movement Type') && h.includes('Storage Location');
-  });
-  if(!sheetName) return null;
-  const grid = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:null, raw:true, cellDates:true});
-  const header = grid[0].map(x=>String(x||'').trim());
-  const col = name => header.indexOf(name);
-  const cDate=col('Posting Date'), cQty=col('Quantity'), cSloc=col('Storage Location'),
-        cMvt=col('Movement Type'), cDht=col('Document Header Text'), cRdc=col('Name 1'),
-        cMat=col('Material'), cDesc=col('Material Description'), cDoc=col('Material Document');
-  if([cDate,cQty,cSloc,cMvt,cDht,cRdc].some(c=>c<0)) return null;
-
-  const out = [];
-  for(let r=1;r<grid.length;r++){
-    const row = grid[r]; if(!row) continue;
-    const mt = String(row[cMvt]||'').trim();
-    const qty = Number(row[cQty])||0;
-    const dateVal = row[cDate];
-    if(!(dateVal instanceof Date)) continue;
-    const period = dateVal.getFullYear()+'-'+String(dateVal.getMonth()+1).padStart(2,'0')+'-01';
-    const rdc = String(row[cRdc]||'').trim().replace(/^RDC\s+/i,'');
-    if(!rdc) continue;
-    const dht = String(row[cDht]||'').trim();
-    let qtyToUse = null, cls = null;
-    if(mt==='311' && row[cSloc]==='RFB1' && qty>0){ qtyToUse = qty; cls = classifySubCategory(dht, mt); }
-    else if(mt==='602'){ qtyToUse = Math.abs(qty); cls = classifySubCategory(dht, mt); }
-    if(qtyToUse==null) continue;
-    out.push({rdc, period, posting_date: dateVal.toISOString().slice(0,10),
-      main_category: cls.main, sub_category: cls.sub,
-      material: cMat>=0?String(row[cMat]||'').trim():'', material_desc: cDesc>=0?String(row[cDesc]||''):'',
-      qty: qtyToUse, sap_document: cDoc>=0?String(row[cDoc]||''):'',
-      driver_vendor: cls.sub==='Transport'?dht:'',
-      movement_type: mt, storage_location: String(row[cSloc]||''), document_header_text: dht});
-  }
-  return out.length ? out : null;
-}
-
-let NBC_UPLOAD_STATE = null; // {batch_id, rdc, period}
-function nbcUploadStepIndicator(active){
-  const steps = ['Upload SAP','Preview Data','Reconciliation','Confirm & Publish'];
-  return `<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">` +
-    steps.map((s,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
-      font-size:11.5px;font-weight:600;background:${i+1===active?'var(--navy)':i+1<active?'#E7F6EC':'#F0EEE8'};
-      color:${i+1===active?'#fff':i+1<active?'#1E7B34':'var(--stone)'};">
-      <span style="width:16px;height:16px;border-radius:50%;background:${i+1<=active?'currentColor':'transparent'};
-        border:1.5px solid currentColor;display:inline-flex;align-items:center;justify-content:center;
-        font-size:9px;color:${i+1===active?'var(--navy)':'#fff'};">${i+1<active?'✓':i+1}</span>${s}</div>`).join('')
-    + `</div>`;
-}
-function renderNbcUploadStep1(){
-  const el = document.getElementById('nbc-upload');
-  el.innerHTML = nbcUploadStepIndicator(1) + `
-    <input type="file" id="nbcFile" accept=".xlsx,.xls" style="display:none">
-    <div style="border:2px dashed var(--border);border-radius:10px;padding:34px 16px;text-align:center;cursor:pointer;"
-      id="nbcDropzone">
-      <div style="font-size:13px;color:var(--stone);margin-bottom:10px;">Drag &amp; drop file SAP MB51 di sini, atau</div>
-      <button class="btn-primary" style="padding:8px 18px;" id="nbcPickFile">Pilih File</button>
-      <div style="font-size:11px;color:var(--stone);margin-top:10px;">Format .xlsx / .xls — kolom Posting Date, Movement Type, Storage Location, Name 1, dll (sama seperti tarikan MB51 yang sudah dipakai)</div>
-    </div>
-    <div id="nbcUploadMsg" style="margin-top:12px;font-size:13px;"></div>`;
-  document.getElementById('nbcPickFile').onclick = ()=>document.getElementById('nbcFile').click();
-  document.getElementById('nbcDropzone').onclick = ()=>document.getElementById('nbcFile').click();
-  document.getElementById('nbcFile').addEventListener('change', e=>{
-    if(e.target.files.length) handleNbcFile(e.target.files[0]);
-  });
-}
-function handleNbcFile(file){
-  const msg = document.getElementById('nbcUploadMsg');
-  msg.innerHTML = '⏳ Membaca file…';
-  const fr = new FileReader();
-  fr.onload = async ev=>{
-    try{
-      const wb = XLSX.read(ev.target.result, {type:'binary', cellDates:true});
-      const rows = parseMB51EventDetail(wb);
-      if(!rows){ msg.innerHTML = '<span style="color:#B3261E;">File tidak dikenali sebagai tarikan MB51 (kolom wajib tidak ditemukan).</span>'; return; }
-      msg.innerHTML = `⏳ Mengunggah ${rows.length} baris…`;
-      const res = await sbRpc('breakage_stage', { p_filename: file.name, p_rows: rows });
-      NBC_UPLOAD_STATE = { batch_id: res.upload_batch_id, rdc: res.rdc, period: res.period };
-      renderNbcUploadStep2(res);
-    }catch(e){ msg.innerHTML = `<span style="color:#B3261E;">Gagal: ${esc(e.message)}</span>`; }
-  };
-  fr.readAsBinaryString(file);
-}
-function renderNbcUploadStep2(res){
-  const el = document.getElementById('nbc-upload');
-  const cats = Object.entries(res.by_category||{});
-  el.innerHTML = nbcUploadStepIndicator(2) + `
-    <div style="font-size:13px;margin-bottom:10px;"><b>${esc(res.rdc)}</b> · Periode ${esc(res.period)} ·
-      ${fmtNum(res.total_rows)} baris · ${fmtNum(res.total_qty)} box</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-      <thead><tr style="background:var(--navy);color:#fff;text-align:left;">
-        <th style="padding:6px 10px;">Kategori</th><th style="padding:6px 10px;">Sub-Kategori</th>
-        <th style="padding:6px 10px;text-align:right;">Qty (Box)</th><th style="padding:6px 10px;text-align:right;">Baris</th></tr></thead>
-      <tbody>${cats.map(([k,v])=>{ const [main,sub]=k.split('|'); return `<tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:6px 10px;">${esc(main)}</td><td style="padding:6px 10px;">${esc(sub)}</td>
-        <td style="padding:6px 10px;text-align:right;">${fmtNum(v.qty)}</td><td style="padding:6px 10px;text-align:right;">${fmtNum(v.rows)}</td></tr>`;}).join('')}</tbody>
-    </table>
-    <button class="btn-primary" style="margin-top:14px;padding:8px 18px;" id="nbcToStep3">Lanjut ke Reconciliation →</button>`;
-  document.getElementById('nbcToStep3').onclick = renderNbcUploadStep3;
-}
-async function renderNbcUploadStep3(){
-  const el = document.getElementById('nbc-upload');
-  el.innerHTML = nbcUploadStepIndicator(3) + '<div class="nbc-placeholder">⏳ Membandingkan dengan data existing…</div>';
-  try{
-    const res = await sbRpc('breakage_reconcile', { p_upload_id: NBC_UPLOAD_STATE.batch_id });
-    const rows = res.detail || [];
-    const badge = s => s==='MATCH' ? '<span style="color:#1E7B34;font-weight:700;">MATCH</span>'
-      : s==='VARIANCE' ? '<span style="color:#946200;font-weight:700;">VARIANCE</span>'
-      : '<span style="color:#B3261E;font-weight:700;">'+s.replace(/_/g,' ')+'</span>';
-    el.innerHTML = nbcUploadStepIndicator(3) + `
-      <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-        <thead><tr style="background:var(--navy);color:#fff;text-align:left;">
-          <th style="padding:6px 10px;">Kategori</th><th style="padding:6px 10px;">Sub</th>
-          <th style="padding:6px 10px;text-align:right;">Existing</th><th style="padding:6px 10px;text-align:right;">SAP</th>
-          <th style="padding:6px 10px;text-align:right;">Variance</th><th style="padding:6px 10px;">Status</th>
-          <th style="padding:6px 10px;">Keputusan</th></tr></thead>
-        <tbody>${rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:6px 10px;">${esc(r.main_category)}</td><td style="padding:6px 10px;">${esc(r.sub_category)}</td>
-          <td style="padding:6px 10px;text-align:right;">${fmtNum(r.existing_qty)}</td>
-          <td style="padding:6px 10px;text-align:right;">${fmtNum(r.sap_qty)}</td>
-          <td style="padding:6px 10px;text-align:right;">${r.variance>0?'+':''}${fmtNum(r.variance)}</td>
-          <td style="padding:6px 10px;">${badge(r.status)}</td>
-          <td style="padding:6px 10px;"><select id="nbcDecision_${i}" style="font-size:11.5px;padding:3px 6px;">
-            <option value="USE_SAP" ${r.status!=='MATCH'?'selected':''}>Pakai Data SAP</option>
-            <option value="KEEP_EXISTING">Pertahankan Existing</option>
-            <option value="SKIP">Lewati</option></select></td></tr>`).join('')}</tbody></table>
-      <button class="btn-primary" style="margin-top:14px;padding:8px 18px;" id="nbcToStep4">Lanjut ke Confirm &amp; Publish →</button>`;
-    document.getElementById('nbcToStep4').onclick = ()=>{
-      // Read every decision select BEFORE the DOM that holds them gets replaced.
-      const decisions = rows.map((r,i)=>({
-        main_category: r.main_category, sub_category: r.sub_category,
-        action: document.getElementById('nbcDecision_'+i).value
-      }));
-      renderNbcUploadStep4(decisions);
-    };
-  }catch(e){ el.innerHTML = `<div class="nbc-placeholder" style="background:#FCEBE9;color:#B3261E;">Gagal: ${esc(e.message)}</div>`; }
-}
-function renderNbcUploadStep4(decisions){
-  const el = document.getElementById('nbc-upload');
-  const useSap = decisions.filter(d=>d.action==='USE_SAP').length;
-  el.innerHTML = nbcUploadStepIndicator(4) + `
-    <div style="font-size:13px;margin-bottom:12px;">Periksa sekali lagi sebelum publish. ${useSap} dari ${decisions.length} kategori akan dipublikasikan ("Pakai Data SAP") — kategori lain tidak disentuh.</div>
-    <div id="nbcPublishMsg" style="margin-bottom:10px;"></div>
-    <button class="btn-primary" style="padding:9px 20px;" id="nbcPublishBtn">✓ Confirm &amp; Publish</button>`;
-  document.getElementById('nbcPublishBtn').onclick = async ()=>{
-    const msg = document.getElementById('nbcPublishMsg');
-    msg.innerHTML = '⏳ Mempublikasikan…';
-    try{
-      await sbRpc('breakage_publish', { p_upload_id: NBC_UPLOAD_STATE.batch_id, p_decisions: decisions });
-      msg.innerHTML = '<span style="color:#1E7B34;font-weight:700;">✓ Berhasil dipublikasikan. Menutup dan memperbarui monitoring…</span>';
-      renderNbcOverview();
-      setTimeout(()=>{
-        document.getElementById('nbcInputModal').style.display = 'none';
-        const activeTab = document.querySelector('.nbc-tab.active')?.dataset.nbc;
-        if(activeTab==='reconcile') renderNbcReconciliationHistory();
-        if(activeTab==='rekap') renderNbcRekapTrend();
-      }, 1400);
-    }catch(e){ msg.innerHTML = `<span style="color:#B3261E;">Gagal: ${esc(e.message)}</span>`; }
-  };
-}
-
-
-
-// ============ MENU 2: REKAP & TREND ============
-let NBC2_SUB = 'rekap';
-function renderNbcRekapTrend(){
-  const el = document.getElementById('nbc-rekap');
-  el.innerHTML = `
-    <div style="display:flex;gap:4px;margin-bottom:12px;">
-      <div class="nbc-subtab active" data-s2="rekap" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;background:var(--navy);color:#fff;">Rekap Bulanan</div>
-      <div class="nbc-subtab" data-s2="trend" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;color:var(--stone);">Trend</div>
-      <div class="nbc-subtab" data-s2="compare" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;color:var(--stone);">RDC Comparison</div>
-    </div>
-    <div id="nbc2-body"></div>`;
-  el.querySelectorAll('.nbc-subtab').forEach(t=>t.addEventListener('click', ()=>{
-    el.querySelectorAll('.nbc-subtab').forEach(x=>{x.style.background='';x.style.color='var(--stone)';});
-    t.style.background='var(--navy)'; t.style.color='#fff';
-    NBC2_SUB = t.dataset.s2;
-    renderNbc2Body();
-  }));
-  renderNbc2Body();
-}
-async function renderNbc2Body(){
-  const body = document.getElementById('nbc2-body');
-  if(!body || !NBC_PERIOD) return;
-  body.innerHTML = '<div class="nbc-placeholder">⏳ Memuat…</div>';
-  const scopeRdc = CURRENT_RDC_SCOPE || (CURRENT_RDC && CURRENT_RDC!=='Semua' ? CURRENT_RDC : 'ALL');
-  const [y,m] = NBC_PERIOD.split('-').map(Number);
-  const fromP = new Date(y, m-1-5, 1); // 6-month window ending at selected period
-  const fromStr = fromP.getFullYear()+'-'+String(fromP.getMonth()+1).padStart(2,'0');
-  try{
-    if(NBC2_SUB==='rekap'){
-      const d = await sbRpc('breakage_rekap_bulanan', {p_from: fromStr, p_to: NBC_PERIOD, p_rdc: scopeRdc});
-      body.innerHTML = nbcRekapTableHtml(d);
-    } else if(NBC2_SUB==='trend'){
-      const d = await sbRpc('breakage_trend', {p_from: fromStr, p_to: NBC_PERIOD, p_rdc: scopeRdc});
-      body.innerHTML = nbcTrendHtml(d.series||[]);
-    } else {
-      const d = await sbRpc('breakage_rdc_comparison', {p_period: NBC_PERIOD});
-      body.innerHTML = nbcComparisonHtml(d.rows||[]);
-    }
-  }catch(e){ body.innerHTML = `<div class="nbc-placeholder" style="background:#FCEBE9;color:#B3261E;">Gagal: ${esc(e.message)}</div>`; }
-}
-function nbcRekapTableHtml(d){
-  const all = d.all_rdc||[], rows = d.rows||[];
-  if(!all.length) return '<div class="nbc-placeholder">Belum ada data breakage untuk rentang periode ini.</div>';
-  const th = `<tr style="background:var(--navy);color:#fff;text-align:right;">
-    <th style="padding:6px 10px;text-align:left;">Bulan</th><th style="padding:6px 10px;text-align:left;">RDC</th>
-    <th style="padding:6px 10px;">Pecah Kiriman</th><th style="padding:6px 10px;">Delivered</th><th style="padding:6px 10px;">D-Rate</th>
-    <th style="padding:6px 10px;">Pecah Gudang</th><th style="padding:6px 10px;">Stock Exp.</th><th style="padding:6px 10px;">W-Rate</th></tr>`;
-  const tr = (label, r, bold) => `<tr style="border-bottom:1px solid var(--border);${bold?'background:#F7F5F1;font-weight:700;':''}">
-    <td style="padding:6px 10px;text-align:left;">${esc(r.bulan||r.period)}</td><td style="padding:6px 10px;text-align:left;">${esc(label)}</td>
-    <td style="padding:6px 10px;text-align:right;">${fmtNum(r.pecah_kiriman)}</td><td style="padding:6px 10px;text-align:right;">${fmtNum(r.delivered)}</td>
-    <td style="padding:6px 10px;text-align:right;">${r.d_rate??'-'}</td>
-    <td style="padding:6px 10px;text-align:right;">${fmtNum(r.pecah_gudang)}</td><td style="padding:6px 10px;text-align:right;">${fmtNum(r.stock_exposure)}</td>
-    <td style="padding:6px 10px;text-align:right;">${r.w_rate??'-'}</td></tr>`;
-  const rdcRows = rows.map(r=>tr(r.rdc, r, false)).join('');
-  const allRows = all.map(r=>tr('ALL RDC (SUM/SUM)', r, true)).join('');
-  return `<table style="width:100%;border-collapse:collapse;font-size:12px;">
-    <thead>${th}</thead><tbody>${rdcRows}${allRows}</tbody></table>
-    <div style="font-size:11px;color:var(--stone);margin-top:8px;">Baris "ALL RDC" selalu dihitung SUM(numerator)/SUM(denominator) — bukan rata-rata rate antar-RDC.</div>`;
-}
-function nbcTrendHtml(series){
-  if(!series.length) return '<div class="nbc-placeholder">Belum ada data tren untuk rentang ini.</div>';
-  const W=700,H=160,pad=30;
-  function chart(key, targetKey, title, color){
-    const vals = series.map(s=>s[key]).filter(v=>v!=null);
-    if(!vals.length) return `<div class="nbc-rate-card"><div class="lbl">${title}</div>
-      <div style="padding:20px;text-align:center;color:var(--stone);font-size:12px;">DATA REQUIRED</div></div>`;
-    const allVals = series.map(s=>s[key]).filter(v=>v!=null).concat(series.map(s=>s[targetKey]).filter(v=>v!=null));
-    const min=0, max=Math.max(...allVals)*1.15;
-    const n = series.length;
-    const x = i => pad + i*((W-2*pad)/(n-1||1));
-    const y = v => H-pad - (v-min)/(max-min||1)*(H-2*pad);
-    const pts = series.map((s,i)=> s[key]!=null ? `${x(i).toFixed(1)},${y(s[key]).toFixed(1)}` : null).filter(Boolean).join(' ');
-    const tgt = series[0][targetKey];
-    const tgtLine = tgt!=null ? `<line x1="${pad}" y1="${y(tgt).toFixed(1)}" x2="${W-pad}" y2="${y(tgt).toFixed(1)}" stroke="#9A6300" stroke-dasharray="4,3" stroke-width="1.4"/>` : '';
-    const labels = series.map((s,i)=>`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="9" fill="#6E6A63" text-anchor="middle">${esc(s.bulan)}</text>`).join('');
-    const dots = series.map((s,i)=> s[key]!=null ? `<circle cx="${x(i).toFixed(1)}" cy="${y(s[key]).toFixed(1)}" r="2.6" fill="${color}"/>` : '').join('');
-    return `<div class="nbc-rate-card">
-      <div class="lbl">${title}</div>
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;margin-top:6px;">
-        ${tgtLine}<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>${dots}${labels}
-      </svg>
-      <div style="font-size:10.5px;color:var(--stone);">— Actual &nbsp;&nbsp; ┅ Target (${tgt??'-'})</div>
-    </div>`;
-  }
-  return `<div style="display:grid;grid-template-columns:1fr;gap:14px;">
-    ${chart('delivery_rate','delivery_target','Delivery Breakage Rate — Trend','#1F3864')}
-    ${chart('warehouse_rate','warehouse_target','Warehouse Breakage Rate — Trend','#C46A1F')}
-  </div>`;
-}
-function nbcComparisonHtml(rows){
-  if(!rows.length) return '<div class="nbc-placeholder">Belum ada data untuk periode ini.</div>';
-  const th = `<tr style="background:var(--navy);color:#fff;text-align:right;">
-    <th style="padding:6px 10px;text-align:left;">RDC</th>
-    <th style="padding:6px 10px;">Delivery Rate</th><th style="padding:6px 10px;">Gap</th><th style="padding:6px 10px;">Trend</th>
-    <th style="padding:6px 10px;">Warehouse Rate</th><th style="padding:6px 10px;">Gap</th><th style="padding:6px 10px;">Trend</th>
-    <th style="padding:6px 10px;text-align:left;">Status</th></tr>`;
-  return `<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead>${th}</thead><tbody>
-    ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:6px 10px;font-weight:600;">${esc(r.rdc)}</td>
-      <td style="padding:6px 10px;text-align:right;">${r.d_rate??'-'}</td>
-      <td style="padding:6px 10px;text-align:right;color:${r.d_gap>0?'#B3261E':'#1E7B34'};">${r.d_gap!=null?(r.d_gap>0?'+':'')+r.d_gap:'-'}</td>
-      <td style="padding:6px 10px;text-align:right;">${r.d_trend!=null?(r.d_trend>0?'▲':'▼')+' '+Math.abs(r.d_trend)+'%':'-'}</td>
-      <td style="padding:6px 10px;text-align:right;">${r.w_rate??'-'}</td>
-      <td style="padding:6px 10px;text-align:right;color:${r.w_gap>0?'#B3261E':'#1E7B34'};">${r.w_gap!=null?(r.w_gap>0?'+':'')+r.w_gap:'-'}</td>
-      <td style="padding:6px 10px;text-align:right;">${r.w_trend!=null?(r.w_trend>0?'▲':'▼')+' '+Math.abs(r.w_trend)+'%':'-'}</td>
-      <td style="padding:6px 10px;"><span style="font-size:10.5px;font-weight:700;color:${r.status==='ABOVE TARGET'?'#B3261E':r.status==='ON TARGET'?'#1E7B34':'#946200'};">${esc(r.status)}</span></td>
-    </tr>`).join('')}</tbody></table>`;
-}
-
-// ============ MENU 3: ROOT CAUSE & ACTION ============
-let NBC3_SUB = 'pareto';
-let NBC3_SELECTED_EVENTS = new Set();
-function renderNbcRootCause(){
-  const el = document.getElementById('nbc-incident');
-  el.innerHTML = `
-    <div style="display:flex;gap:4px;margin-bottom:12px;">
-      <div class="nbc-subtab active" data-s3="pareto" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;background:var(--navy);color:#fff;">Pareto Cause</div>
-      <div class="nbc-subtab" data-s3="incident" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;color:var(--stone);">Incident Detail</div>
-      <div class="nbc-subtab" data-s3="action" style="padding:6px 12px;font-size:12px;font-weight:600;
-        cursor:pointer;border-radius:6px;color:var(--stone);">Action Tracker</div>
-    </div>
-    <div id="nbc3-body"></div>`;
-  el.querySelectorAll('.nbc-subtab').forEach(t=>t.addEventListener('click', ()=>{
-    el.querySelectorAll('.nbc-subtab').forEach(x=>{x.style.background='';x.style.color='var(--stone)';});
-    t.style.background='var(--navy)'; t.style.color='#fff';
-    NBC3_SUB = t.dataset.s3;
-    renderNbc3Body();
-  }));
-  renderNbc3Body();
-}
-async function renderNbc3Body(){
-  const body = document.getElementById('nbc3-body');
-  if(!body || !NBC_PERIOD) return;
-  body.innerHTML = '<div class="nbc-placeholder">⏳ Memuat…</div>';
-  const scopeRdc = CURRENT_RDC_SCOPE || (CURRENT_RDC && CURRENT_RDC!=='Semua' ? CURRENT_RDC : 'ALL');
-  try{
-    if(NBC3_SUB==='pareto'){
-      const d = await sbRpc('breakage_pareto', {p_period: NBC_PERIOD, p_rdc: scopeRdc});
-      body.innerHTML = nbcParetoHtml(d);
-    } else if(NBC3_SUB==='incident'){
-      await renderNbcIncidentDetail(scopeRdc);
-    } else {
-      await renderNbcActionTracker(scopeRdc);
-    }
-  }catch(e){ body.innerHTML = `<div class="nbc-placeholder" style="background:#FCEBE9;color:#B3261E;">Gagal: ${esc(e.message)}</div>`; }
-}
-function nbcParetoHtml(d){
-  const rows = d.rows||[];
-  if(!rows.length) return '<div class="nbc-placeholder">Belum ada data breakage untuk periode ini.</div>';
-  const W=680,H=220,pad=40, barW=(W-2*pad)/rows.length*0.6;
-  const maxQty = Math.max(...rows.map(r=>r.qty));
-  const bars = rows.map((r,i)=>{
-    const cx = pad + i*((W-2*pad)/rows.length) + (W-2*pad)/rows.length/2;
-    const bh = (r.qty/maxQty)*(H-2*pad-20);
-    return `<rect x="${(cx-barW/2).toFixed(1)}" y="${(H-pad-bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" fill="#1F3864"/>
-      <text x="${cx.toFixed(1)}" y="${H-pad+14}" font-size="9" fill="#6E6A63" text-anchor="middle">${esc(r.sub_category)}</text>
-      <text x="${cx.toFixed(1)}" y="${(H-pad-bh-6).toFixed(1)}" font-size="9.5" fill="#14161A" text-anchor="middle" font-weight="700">${fmtNum(r.qty)}</text>`;
-  }).join('');
-  const cumPts = rows.map((r,i)=>{
-    const cx = pad + i*((W-2*pad)/rows.length) + (W-2*pad)/rows.length/2;
-    const cy = H-pad-20 - (r.cum_pct/100)*(H-2*pad-20);
-    return `${cx.toFixed(1)},${cy.toFixed(1)}`;
-  }).join(' ');
-  return `<div class="nbc-rate-card">
-    <div class="lbl">Pareto Cause — ${esc(d.period)} (Total ${fmtNum(d.total)} Box)</div>
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;margin-top:8px;">
-      ${bars}<polyline points="${cumPts}" fill="none" stroke="#C46A1F" stroke-width="1.8"/>
-      ${rows.map((r,i)=>{const cx=pad+i*((W-2*pad)/rows.length)+(W-2*pad)/rows.length/2;
-        const cy=H-pad-20-(r.cum_pct/100)*(H-2*pad-20);
-        return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5" fill="#C46A1F"/>`;}).join('')}
-    </svg>
-    <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;">
-      <thead><tr style="background:#F0EEE8;text-align:right;"><th style="padding:5px 8px;text-align:left;">Sub-Kategori</th>
-        <th style="padding:5px 8px;">Qty</th><th style="padding:5px 8px;">%</th><th style="padding:5px 8px;">Kumulatif %</th></tr></thead>
-      <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:5px 8px;">${esc(r.sub_category)}</td><td style="padding:5px 8px;text-align:right;">${fmtNum(r.qty)}</td>
-        <td style="padding:5px 8px;text-align:right;">${r.pct}%</td><td style="padding:5px 8px;text-align:right;">${r.cum_pct}%</td></tr>`).join('')}</tbody>
-    </table></div>`;
-}
-async function renderNbcIncidentDetail(scopeRdc){
-  const body = document.getElementById('nbc3-body');
-  const [incidents, ungrouped] = await Promise.all([
-    sbRpc('breakage_incident_list', {p_period: NBC_PERIOD, p_rdc: scopeRdc}),
-    sbRpc('breakage_ungrouped_events', {p_period: NBC_PERIOD, p_rdc: scopeRdc})
-  ]);
-  NBC3_SELECTED_EVENTS = new Set();
-  let html = `<div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">Insiden Tercatat (${incidents.length})</div>`;
-  html += incidents.length ? `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
-    <thead><tr style="background:var(--navy);color:#fff;text-align:left;">
-      <th style="padding:6px 10px;">Incident No</th><th style="padding:6px 10px;">RDC</th><th style="padding:6px 10px;">Sub-Kategori</th>
-      <th style="padding:6px 10px;text-align:right;">Qty</th><th style="padding:6px 10px;">PIC</th><th style="padding:6px 10px;">Status</th></tr></thead>
-    <tbody>${incidents.map(i=>`<tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:6px 10px;font-weight:600;">${esc(i.incident_no)}</td><td style="padding:6px 10px;">${esc(i.rdc)}</td>
-      <td style="padding:6px 10px;">${esc(i.sub_category)}</td><td style="padding:6px 10px;text-align:right;">${fmtNum(i.qty_box)}</td>
-      <td style="padding:6px 10px;">${esc(i.pic||'-')}</td><td style="padding:6px 10px;">${esc(i.status)}</td></tr>`).join('')}</tbody>
-    </table>` : `<div class="nbc-placeholder" style="margin-bottom:16px;">Belum ada insiden yang dikelompokkan untuk periode ini.</div>`;
-
-  html += `<div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">Event Belum Dikelompokkan (${ungrouped.length})</div>`;
-  if(ungrouped.length){
-    html += `<div style="font-size:11px;color:var(--stone);margin-bottom:8px;">Pilih event dengan RDC, kategori, dan sub-kategori yang SAMA untuk digabung jadi satu insiden.</div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <thead><tr style="background:#F0EEE8;text-align:left;"><th style="padding:5px 8px;"></th>
-        <th style="padding:5px 8px;">RDC</th><th style="padding:5px 8px;">Tanggal</th><th style="padding:5px 8px;">Sub-Kategori</th>
-        <th style="padding:5px 8px;">Material</th><th style="padding:5px 8px;text-align:right;">Qty</th><th style="padding:5px 8px;">SAP Doc</th><th style="padding:5px 8px;">Driver/Vendor</th></tr></thead>
-      <tbody>${ungrouped.map(e=>`<tr style="border-bottom:1px solid var(--border);">
-        <td style="padding:5px 8px;"><input type="checkbox" class="nbc-ev-chk" data-id="${e.id}"></td>
-        <td style="padding:5px 8px;">${esc(e.rdc)}</td><td style="padding:5px 8px;">${esc(e.posting_date||'-')}</td>
-        <td style="padding:5px 8px;">${esc(e.sub_category)}</td><td style="padding:5px 8px;">${esc(e.material_code||'-')}</td>
-        <td style="padding:5px 8px;text-align:right;">${fmtNum(e.qty_box)}</td>
-        <td style="padding:5px 8px;">${esc(e.sap_document||'-')}</td><td style="padding:5px 8px;">${esc(e.driver_vendor||'-')}</td></tr>`).join('')}</tbody>
-      </table>
-      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input id="nbcGroupResp" placeholder="Responsibility" style="font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;">
-        <input id="nbcGroupPic" placeholder="PIC" style="font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;">
-        <button class="btn-primary" id="nbcGroupBtn" style="padding:7px 14px;font-size:12px;">Kelompokkan Jadi Insiden</button>
-      </div>
-      <div id="nbcGroupMsg" style="margin-top:8px;font-size:12.5px;"></div>`;
-  } else {
-    html += `<div class="nbc-placeholder">Semua event untuk periode ini sudah dikelompokkan.</div>`;
-  }
-  body.innerHTML = html;
-  const btn = document.getElementById('nbcGroupBtn');
-  if(btn) btn.onclick = async ()=>{
-    const ids = Array.from(document.querySelectorAll('.nbc-ev-chk:checked')).map(c=>parseInt(c.dataset.id));
-    const msg = document.getElementById('nbcGroupMsg');
-    if(!ids.length){ msg.innerHTML = '<span style="color:#B3261E;">Pilih minimal 1 event.</span>'; return; }
-    msg.innerHTML = '⏳ Mengelompokkan…';
-    try{
-      const res = await sbRpc('breakage_group_events', {
-        p_event_ids: ids,
-        p_responsibility: document.getElementById('nbcGroupResp').value || null,
-        p_pic: document.getElementById('nbcGroupPic').value || null
-      });
-      msg.innerHTML = `<span style="color:#1E7B34;font-weight:700;">✓ ${res.events_grouped} event digabung jadi 1 insiden (${fmtNum(res.qty_box)} box).</span>`;
-      // Guard against a race: only refresh THIS sub-tab's content if the user is still on it —
-      // otherwise a delayed refresh can clobber whatever sub-tab they've since switched to.
-      setTimeout(()=>{ if(NBC3_SUB==='incident') renderNbcIncidentDetail(scopeRdc); }, 900);
-    }catch(e){ msg.innerHTML = `<span style="color:#B3261E;">Gagal: ${esc(e.message)}</span>`; }
-  };
-}
-async function renderNbcActionTracker(scopeRdc){
-  const body = document.getElementById('nbc3-body');
-  const [actions, incidents] = await Promise.all([
-    sbRpc('breakage_action_list', {p_rdc: scopeRdc, p_status: 'ALL'}),
-    sbRpc('breakage_incident_list', {p_period: NBC_PERIOD, p_rdc: scopeRdc})
-  ]);
-  const incOpts = incidents.map(i=>`<option value="${i.incident_id}">${esc(i.incident_no)} — ${esc(i.sub_category)} (${esc(i.rdc)})</option>`).join('');
-  let html = `<div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px;">
-    <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">Tambah / Update Action</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-      <select id="nbcActIncident" style="font-size:12px;padding:6px;grid-column:1/-1;">${incOpts||'<option value="">Tidak ada insiden untuk periode ini</option>'}</select>
-      <input id="nbcActProblem" placeholder="Problem" style="font-size:12px;padding:6px;">
-      <input id="nbcActRoot" placeholder="Root Cause" style="font-size:12px;padding:6px;">
-      <input id="nbcActCorrective" placeholder="Corrective Action" style="font-size:12px;padding:6px;grid-column:1/-1;">
-      <input id="nbcActOwner" placeholder="Owner/PIC" style="font-size:12px;padding:6px;">
-      <input id="nbcActDue" type="date" style="font-size:12px;padding:6px;">
-      <select id="nbcActStatus" style="font-size:12px;padding:6px;">
-        <option>OPEN</option><option>INVESTIGATION</option><option>IN PROGRESS</option><option>CLOSED</option></select>
-    </div>
-    <button class="btn-primary" id="nbcActSave" style="padding:7px 14px;font-size:12px;">Simpan Action</button>
-    <div id="nbcActMsg" style="margin-top:6px;font-size:12px;"></div>
-  </div>
-  <div style="font-weight:700;font-size:12.5px;margin-bottom:8px;">Daftar Action (${actions.length})</div>`;
-  html += actions.length ? `<table style="width:100%;border-collapse:collapse;font-size:11.5px;">
-    <thead><tr style="background:var(--navy);color:#fff;text-align:left;">
-      <th style="padding:5px 8px;">Incident</th><th style="padding:5px 8px;">Problem</th><th style="padding:5px 8px;">Corrective Action</th>
-      <th style="padding:5px 8px;">Owner</th><th style="padding:5px 8px;">Due</th><th style="padding:5px 8px;">Status</th></tr></thead>
-    <tbody>${actions.map(a=>`<tr style="border-bottom:1px solid var(--border);${a.overdue?'background:#FCEBE9;':''}">
-      <td style="padding:5px 8px;font-weight:600;">${esc(a.incident_no)}</td><td style="padding:5px 8px;">${esc(a.problem||'-')}</td>
-      <td style="padding:5px 8px;">${esc(a.corrective_action||'-')}</td><td style="padding:5px 8px;">${esc(a.owner_pic||'-')}</td>
-      <td style="padding:5px 8px;">${esc(a.due_date||'-')}</td>
-      <td style="padding:5px 8px;font-weight:700;color:${a.overdue?'#B3261E':a.status==='CLOSED'?'#1E7B34':'#946200'};">${a.overdue?'OVERDUE':esc(a.status)}</td></tr>`).join('')}</tbody>
-    </table>` : `<div class="nbc-placeholder">Belum ada action tercatat.</div>`;
-  body.innerHTML = html;
-  document.getElementById('nbcActSave').onclick = async ()=>{
-    const msg = document.getElementById('nbcActMsg');
-    const incId = parseInt(document.getElementById('nbcActIncident').value);
-    if(!incId){ msg.innerHTML = '<span style="color:#B3261E;">Pilih insiden dulu.</span>'; return; }
-    msg.innerHTML = '⏳ Menyimpan…';
-    try{
-      await sbRpc('breakage_action_save', {
-        p_incident_id: incId, p_problem: document.getElementById('nbcActProblem').value,
-        p_root_cause: document.getElementById('nbcActRoot').value,
-        p_corrective_action: document.getElementById('nbcActCorrective').value,
-        p_owner_pic: document.getElementById('nbcActOwner').value,
-        p_due_date: document.getElementById('nbcActDue').value,
-        p_status: document.getElementById('nbcActStatus').value
-      });
-      msg.innerHTML = '<span style="color:#1E7B34;font-weight:700;">✓ Tersimpan.</span>';
-      setTimeout(()=>{ if(NBC3_SUB==='action') renderNbcActionTracker(scopeRdc); }, 700);
-    }catch(e){ msg.innerHTML = `<span style="color:#B3261E;">Gagal: ${esc(e.message)}</span>`; }
-  };
-}
-
-
-
-// ============ LOGIN (ID + password, akun yang sama dengan WMS & Dashboard) ============
-async function doLogin(){
-  const id = (document.getElementById('loginId').value||'').trim();
-  const pw = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-  if(!id){ errEl.textContent='ID pengguna wajib diisi.'; return; }
-  if(!pw){ errEl.textContent='Password wajib diisi.'; return; }
-  try{
-    const account = await sbRpc('verify_login', {input_username:id, input_password:pw});
-    if(!account){ errEl.textContent='ID atau password salah.'; return; }
-    CURRENT_PASSWORD = pw;
-    CURRENT_USERNAME = account.username || id;
-    CURRENT_ROLE = account.role;
-    CURRENT_RDC_SCOPE = account.rdc_name;
-    sessionStorage.setItem('sls_pw', pw);
-    sessionStorage.setItem('sls_user', CURRENT_USERNAME);
-    AUTH_SESSION_OK = await establishAuthSession(pw, CURRENT_USERNAME);
-    await boot();
-  }catch(e){ errEl.textContent = 'Gagal terhubung ke server: ' + (e.message||e); }
-}
-async function boot(){
-  document.getElementById('loginOverlay').style.display='none';
-  document.getElementById('appRoot').style.display='block';
-  document.getElementById('roleBadge').textContent =
-    CURRENT_ROLE==='master' ? 'MASTER · Nasional' : ('RDC ' + (CURRENT_RDC_SCOPE||''));
-  populateNbcPeriods();
-  renderNbcPlaceholders();
-  renderNbcOverview();
-}
-document.getElementById('loginBtn').addEventListener('click', doLogin);
-document.getElementById('loginPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
-document.getElementById('loginId').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginPassword').focus(); });
-document.getElementById('logoutBtn').addEventListener('click', ()=>{
-  sessionStorage.removeItem('sls_pw'); sessionStorage.removeItem('sls_user'); location.reload();
-});
-document.getElementById('openDashboardBtn').addEventListener('click', ()=>{
-  window.open(DASHBOARD_APP_URL, '_blank', 'noopener,noreferrer');
-});
-(async function init(){
-  const pw = sessionStorage.getItem('sls_pw'), u = sessionStorage.getItem('sls_user');
-  if(!pw || !u) return;
-  try{
-    const account = await sbRpc('verify_login', {input_username:u, input_password:pw});
-    if(account){
-      CURRENT_PASSWORD=pw; CURRENT_USERNAME=account.username||u;
-      CURRENT_ROLE=account.role; CURRENT_RDC_SCOPE=account.rdc_name;
-      AUTH_SESSION_OK = await establishAuthSession(pw, CURRENT_USERNAME);
-      await boot();
-    }
-  }catch(e){}
-})();
+const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
+const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
+let SESSION=null, ACCESS=null, PASSWORD='', PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[];
+const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
+const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt=v=>v==null?'—':Number(v).toLocaleString('id-ID',{maximumFractionDigits:2}); const rate=v=>v==null?'DATA REQUIRED':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+function logoSvg(size=58){return `<svg class="roman" width="${size}" viewBox="0 0 100 80" aria-label="ROMAN"><path d="M12 47A38 38 0 0 1 88 47" fill="none" stroke="#ef1b2d" stroke-width="12"/><path d="M23 47A27 27 0 0 1 77 47" fill="none" stroke="#ffd21d" stroke-width="8"/><path d="M17 49h66l-8 10H25z" fill="#061b3c"/><circle cx="50" cy="48" r="8" fill="#ffd21d" stroke="#061b3c" stroke-width="4"/><text x="50" y="75" text-anchor="middle" font-size="18" font-weight="900" font-style="italic" fill="#ef1b2d">ROMAN</text></svg>`}
+$('loginLogo').innerHTML=logoSvg(64);$('sideLogo').innerHTML=logoSvg(58);$('modalLogo').innerHTML=logoSvg(42);
+function auth(){return SESSION?.access_token||PUBLIC_ANON}
+async function rpc(fn,params={}){const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${auth()}`,'Content-Type':'application/json'},body:JSON.stringify(params)});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function signIn(pw){const email=await rpc('get_login_email',{input_password:pw});if(!email)throw new Error('Password salah.');const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{apikey:PUBLIC_ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});if(!r.ok)throw new Error('Login Supabase gagal.');SESSION=await r.json();ACCESS=await rpc('breakage_my_access_v44',{});}
+function monthName(p){const [y,m]=p.split('-').map(Number);return new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))}
+function initPeriods(){const s=$('period');let a=[];for(let m=1;m<=12;m++)a.push(`2026-${String(m).padStart(2,'0')}`);s.innerHTML=a.map(p=>`<option value="${p}" ${p===PERIOD?'selected':''}>${monthName(p)}</option>`).join('')}
+function scopeForRpc(){return ACCESS?.is_master?SCOPE:(ACCESS?.rdc_name||SCOPE)}
+async function loadAll(){try{SCOPE=scopeForRpc();$('scope').value=SCOPE;const [o,t,inc,cmp,tr,h]=await Promise.all([
+ rpc('breakage_overview',{p_period:PERIOD,p_rdc:SCOPE}),rpc('breakage_target_matrix_v45',{p_scope:SCOPE}),rpc('breakage_incident_list',{p_period:PERIOD,p_rdc:SCOPE}),rpc('breakage_rdc_comparison',{p_period:PERIOD}),
+ rpc('breakage_trend',{p_from:monthOffset(PERIOD,-5),p_to:PERIOD,p_rdc:SCOPE}),rpc('breakage_reconciliation_history',{p_rdc:SCOPE})]);OVERVIEW=o;TARGETS=t||[];INCIDENTS=inc||[];RDCROWS=cmp?.rows||[];TREND=tr?.series||[];window.RECONH=h||[];renderAll()}catch(e){console.error(e); toast('Gagal memuat data: '+cleanErr(e.message),'bad')}}
+function monthOffset(p,n){let[y,m]=p.split('-').map(Number);let d=new Date(y,m-1+n,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function cleanErr(s){try{let j=JSON.parse(s);return j.message||j.error||s}catch{return s}}
+function targetRows(period=PERIOD){return TARGETS.filter(x=>x.period_key===period).sort((a,b)=>a.window_order-b.window_order)}
+function targetFor(kpi,gran=GRAN){let rows=targetRows().filter(x=>x.kpi_code===kpi);if(!rows.length)return null;if(gran==='monthly')return rows.at(-1);let w=$('windowSel').value;return rows.find(x=>x.window_code===w)||rows[0]}
+function setupWindow(){let rows=[...new Map(targetRows().map(x=>[x.window_code,x])).values()];$('windowSel').innerHTML=rows.map(x=>`<option value="${x.window_code}">${esc(x.window_label)}</option>`).join('');$('windowCtrl').classList.toggle('hidden',GRAN==='monthly'||!rows.length)}
+function targetGap(actual,kpi){const t=targetFor(kpi);return actual==null||!t?null:Number(actual)-Number(t.target_value)}
+function pillFor(actual,kpi){const g=targetGap(actual,kpi);if(g==null)return '<span class="status-pill s-watch">DATA REQUIRED</span>';return g<=0?'<span class="status-pill s-good">Baik</span>':g<=.25?'<span class="status-pill s-watch">Perlu Perhatian</span>':'<span class="status-pill s-bad">Perlu Tindakan</span>'}
+function receivingQty(){return INCIDENTS.filter(i=>i.incident_type==='receiving').reduce((a,b)=>a+Number(b.qty_box||0),0)}
+function renderKpis(){let d=OVERVIEW?.delivery||{},w=OVERVIEW?.warehouse||{},td=targetFor('delivery'),tw=targetFor('warehouse'),rq=receivingQty();$('kpis').innerHTML=`
+<div class="card kpi"><div class="label">▣ Delivery Breakage Rate</div><div class="sub">Pecah Kiriman / 10.000 Delivered</div><div class="value">${rate(d.rate)} ${d.rate!=null?'<span class="unit">/10.000</span>':''}</div><div class="foot">Target ${td?'≤ '+fmt(td.target_value):'DATA REQUIRED'} · ${d.delivered?fmt(d.delivered)+' Delivered':'denominator belum tersedia'}</div>${pillFor(d.rate,'delivery')}</div>
+<div class="card kpi"><div class="label">⌂ Warehouse Breakage Rate</div><div class="sub">Pecah Pallet/Gudang / 10.000 Stock Exposure</div><div class="value">${rate(w.rate)} ${w.rate!=null?'<span class="unit">/10.000</span>':''}</div><div class="foot">Target ${tw?'≤ '+fmt(tw.target_value):'DATA REQUIRED'} · ${w.stock_exposure?fmt(w.stock_exposure)+' exposure':'denominator belum tersedia'}</div>${pillFor(w.rate,'warehouse')}</div>
+<div class="card kpi"><div class="label">◇ Receiving Breakage</div><div class="sub">Qty / Control Volume</div><div class="value">${fmt(rq)} <span class="unit">BOX</span></div><div class="foot">Tidak dimasukkan ke Delivery / Warehouse Rate</div><span class="status-pill s-blue">Qty only</span></div>
+<div class="card kpi"><div class="label">✺ Score KPI ${SCOPE==='ALL'?'Nasional':esc(SCOPE)}</div><div class="sub">Actual vs Target</div><div class="value configreq">CONFIG REQUIRED</div><div class="foot">Formula score 0–100 belum dikunci oleh management.</div></div>
+<div class="card kpi"><div class="label">◎ Target KPI</div><div class="sub">Program Sep–Okt 2026</div><div class="value">${td?fmt(td.target_value):'—'}</div><div class="foot">${td?esc(td.window_label):'Target belum tersedia'}</div><span class="status-pill s-blue">${TARGETS.length?'Aktif':'DATA REQUIRED'}</span></div>`}
+function renderTargetWindow(){let all=TARGETS.filter(x=>x.program_code==='BREAKAGE_REDUCTION_SEP_OCT_2026');const windows=[...new Map(all.map(x=>[x.window_code,x])).values()].sort((a,b)=>a.window_order-b.window_order);const val=(k,w)=>all.find(x=>x.kpi_code===k&&x.window_code===w)?.target_value;$('targetWindow').innerHTML=`<div class="section-title">▣ Target Window KPI Rate / 10.000 <span style="font-size:10px;color:var(--muted);font-weight:600">Target resmi Project Breakage All RDC</span></div><div class="target-matrix"><div class="tm-cell tm-head">KPI</div>${windows.map(w=>`<div class="tm-cell tm-head">${esc(w.window_label)}</div>`).join('')}<div class="tm-cell tm-kpi">Delivery Breakage Rate</div>${windows.map(w=>`<div class="tm-cell" style="text-align:center;font-weight:800">≤ ${fmt(val('delivery',w.window_code))}</div>`).join('')}<div class="tm-cell tm-kpi">Warehouse Breakage Rate</div>${windows.map(w=>`<div class="tm-cell" style="text-align:center;font-weight:800">≤ ${fmt(val('warehouse',w.window_code))}</div>`).join('')}</div><div class="smallnote" style="margin-top:8px">Receiving tetap Qty/control volume. National Rate = SUM numerator / SUM denominator, bukan average rate RDC.</div>`}
+function renderScorecard(){if(GRAN==='monthly')return renderMonthlyScorecard();return renderOperationalScorecard()}
+function renderMonthlyScorecard(){let rows=RDCROWS.map(r=>{let td=targetFor('delivery'),tw=targetFor('warehouse'),dg=r.d_rate==null||!td?null:Number(r.d_rate)-Number(td.target_value),wg=r.w_rate==null||!tw?null:Number(r.w_rate)-Number(tw.target_value);return {...r,d_target:td?.target_value,w_target:tw?.target_value,d_gap:dg,w_gap:wg}});let national={rdc:'NASIONAL',d_rate:OVERVIEW?.delivery?.rate,w_rate:OVERVIEW?.warehouse?.rate,d_target:targetFor('delivery')?.target_value,w_target:targetFor('warehouse')?.target_value,d_gap:targetGap(OVERVIEW?.delivery?.rate,'delivery'),w_gap:targetGap(OVERVIEW?.warehouse?.rate,'warehouse')};$('scorecard').innerHTML=`<div class="section-title" style="padding:12px 14px;margin:0">Rekap & Trend — Score per RDC</div><div class="subtabs"><button class="active">Rekap Bulanan</button><button>Score RDC</button><button>Score Nasional</button></div><div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Delivery Actual</th><th>Target</th><th>Gap</th><th>Warehouse Actual</th><th>Target</th><th>Gap</th><th>Score KPI</th><th>Status</th></tr></thead><tbody>${[...rows,national].map(r=>`<tr class="${r.rdc==='NASIONAL'?'national':''}"><td>${esc(r.rdc)}</td><td>${rate(r.d_rate)}</td><td>${r.d_target!=null?'≤ '+fmt(r.d_target):'—'}</td><td class="${r.d_gap>0?'bad':'good'}">${r.d_gap==null?'—':(r.d_gap>0?'+':'')+fmt(r.d_gap)}</td><td>${rate(r.w_rate)}</td><td>${r.w_target!=null?'≤ '+fmt(r.w_target):'—'}</td><td class="${r.w_gap>0?'bad':'good'}">${r.w_gap==null?'—':(r.w_gap>0?'+':'')+fmt(r.w_gap)}</td><td class="warn">CONFIG REQUIRED</td><td>${(r.d_gap==null&&r.w_gap==null)?'<span class="status-pill s-watch">DATA REQUIRED</span>':(Math.max(r.d_gap??-99,r.w_gap??-99)<=0?'<span class="status-pill s-good">Baik</span>':'<span class="status-pill s-bad">Above Target</span>')}</td></tr>`).join('')}</tbody></table></div>`}
+function groupIncidents(gran){let groups={};INCIDENTS.forEach(i=>{let d=new Date(i.occurrence_date+'T00:00:00');let key;if(gran==='daily')key=i.occurrence_date;else{let day=d.getDate();let wk=Math.ceil(day/7);key=`Week ${wk}`;}let g=groups[key]||(groups[key]={key,delivery:0,warehouse:0,receiving:0,cases:0});g[i.incident_type]=(g[i.incident_type]||0)+Number(i.qty_box||0);g.cases++});return Object.values(groups)}
+function renderOperationalScorecard(){let rows=groupIncidents(GRAN);$('scorecard').innerHTML=`<div class="section-title" style="padding:12px 14px;margin:0">Rekap ${GRAN==='daily'?'Harian':'Mingguan'} — ${esc(SCOPE==='ALL'?'Nasional':SCOPE)}</div><div class="hint" style="margin:0 12px 10px">Incident quantity dapat direkap ${GRAN==='daily'?'per hari':'per minggu'}. Rate dan Score menunggu denominator harian/mingguan authoritative serta formula scoring yang disetujui.</div><div class="tablewrap"><table class="tbl"><thead><tr><th>Periode</th><th>Delivery Qty</th><th>Warehouse Qty</th><th>Receiving Qty</th><th>Kasus</th><th>Delivery Rate</th><th>Warehouse Rate</th><th>Score</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.key)}</td><td>${fmt(r.delivery)}</td><td>${fmt(r.warehouse)}</td><td>${fmt(r.receiving)}</td><td>${r.cases}</td><td class="warn">DATA REQUIRED</td><td class="warn">DATA REQUIRED</td><td class="warn">CONFIG REQUIRED</td></tr>`).join(''):`<tr><td colspan="8"><div class="empty">Belum ada incident untuk periode ini.</div></td></tr>`}</tbody></table></div>`}
+function renderTrend(){let s=TREND||[];$('trendChart').innerHTML=`<div class="section-title">Trend Breakage Rate (/10.000)</div>${lineChart(s,'delivery_rate','warehouse_rate')}`;$('scoreChart').innerHTML=`<div class="section-title">Perkembangan Score KPI</div><div class="empty"><b class="warn">CONFIG REQUIRED</b><br><br>Grafik score aktif setelah formula scoring disetujui.</div>`}
+function lineChart(data,k1,k2){if(!data.some(x=>x[k1]!=null||x[k2]!=null))return '<div class="empty">DATA REQUIRED — denominator belum tersedia untuk trend.</div>';let vals=data.flatMap(x=>[x[k1],x[k2]]).filter(v=>v!=null).map(Number),max=Math.max(1,...vals)*1.2,W=600,H=180,p=32,x=i=>p+i*((W-p*2)/Math.max(1,data.length-1)),y=v=>H-p-(Number(v)/max)*(H-p*2);let path=k=>data.map((d,i)=>d[k]!=null?`${i?'L':'M'}${x(i)},${y(d[k])}`:'').join(' ');return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="${p}" y1="${H-p}" x2="${W-p}" y2="${H-p}" stroke="#cfd7e4"/><path d="${path(k1)}" fill="none" stroke="#1264d5" stroke-width="3"/><path d="${path(k2)}" fill="none" stroke="#f59e0b" stroke-width="3"/>${data.map((d,i)=>`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="9" fill="#69758a">${esc((d.bulan||d.period||'').replace(' ','\n'))}</text>`).join('')}</svg><div class="smallnote">● Delivery &nbsp; <span style="color:#f59e0b">● Warehouse</span></div>`}
+function renderActions(){let open=INCIDENTS.filter(i=>String(i.status).toUpperCase()!=='CLOSED').length;let rec=(window.RECONH||[])[0];$('actions').innerHTML=`<div class="section-title">Operational Action Center</div><div class="action-row"><div>⚠ Open Incident<br><span class="n">${open}</span> <span class="smallnote">Kasus</span></div><button class="secondary" onclick="showPage('incident')">Detail</button></div><div class="action-row"><div>◷ Overdue Follow-up<br><span class="n warn">—</span></div><span class="smallnote">Action due-date data required</span></div><div class="action-row"><div>▣ Rekonsiliasi Terbaru<br><b>${rec?esc(rec.period):'Belum ada'}</b></div><span class="smallnote">${rec?esc(rec.status):''}</span></div><div class="action-row"><div>◎ Revisi Target</div><button class="secondary" onclick="openTarget()">Lihat</button></div>`}
+function renderRekapPage(){if(GRAN!=='monthly'){let rows=groupIncidents(GRAN);$('rekapBody').innerHTML=`<div class="section-title">Rekap ${GRAN==='daily'?'Harian':'Mingguan'}</div><div class="hint">Rate harian/mingguan tidak dihitung dari incident saja. Denominator authoritative diperlukan.</div>${$('scorecard').innerHTML}`;return}let rows=RDCROWS;$('rekapBody').innerHTML=`<div class="section-title">Rekap Bulanan & RDC Comparison — ${monthName(PERIOD)}</div><div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Delivery Rate</th><th>Warehouse Rate</th><th>Delivery Trend</th><th>Warehouse Trend</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.rdc)}</td><td>${rate(r.d_rate)}</td><td>${rate(r.w_rate)}</td><td>${r.d_trend==null?'—':fmt(r.d_trend)+'%'}</td><td>${r.w_trend==null?'—':fmt(r.w_trend)+'%'}</td><td>${pillFor(Math.max(r.d_rate??0,r.w_rate??0),r.d_rate!=null?'delivery':'warehouse')}</td></tr>`).join(''):`<tr><td colspan="6"><div class="empty">DATA REQUIRED</div></td></tr>`}</tbody></table></div><div style="margin-top:12px"><button class="secondary" onclick="exportExcel()">↓ Export Excel</button> <button class="secondary" onclick="window.print()">↓ Print / PDF</button></div>`}
+function renderIncidentPage(){let rows=INCIDENTS;$('incidentBody').innerHTML=`<div class="section-title">Incident — ${monthName(PERIOD)} <span style="margin-left:auto"><button class="primary" onclick="openInput()">＋ Input Breakage</button></span></div><div class="tablewrap"><table class="tbl"><thead><tr><th>Incident</th><th>Tanggal</th><th>RDC</th><th>Jenis</th><th>Item</th><th>Qty</th><th>No BA</th><th>Reported By</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.incident_no)}</td><td>${esc(r.occurrence_date)}</td><td>${esc(r.rdc)}</td><td>${esc(r.incident_type)}</td><td>${esc(r.item_code)}</td><td>${fmt(r.qty_box)} ${esc(r.uom)}</td><td>${esc(r.no_ba)}</td><td>${esc(r.reported_by)}</td><td><span class="status-pill ${String(r.status).toUpperCase()==='CLOSED'?'s-good':'s-watch'}">${esc(r.status)}</span></td></tr>`).join(''):`<tr><td colspan="9"><div class="empty">Belum ada incident pada periode ini.</div></td></tr>`}</tbody></table></div>`}
+function renderReconPage(){let h=window.RECONH||[];$('reconBody').innerHTML=`<div class="section-title">Monthly Reconciliation — SAP MB51 <span style="margin-left:auto"><button class="primary" onclick="openRecon()">Start Reconciliation</button></span></div><div class="hint">Daily Incident adalah case-level control. SAP MB51 adalah month-end transactional control. Keduanya tidak boleh double count.</div><div class="tablewrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>Periode</th><th>RDC</th><th>File</th><th>Rows</th><th>Status</th><th>Upload</th><th>Publish</th></tr></thead><tbody>${h.length?h.map(r=>`<tr><td>${esc(r.period)}</td><td>${esc(r.rdc)}</td><td>${esc(r.filename)}</td><td>${fmt(r.total_rows)}</td><td>${esc(r.status)}</td><td>${esc(r.uploaded_at)}</td><td>${esc(r.published_at||'—')}</td></tr>`).join(''):`<tr><td colspan="7"><div class="empty">Belum ada reconciliation history.</div></td></tr>`}</tbody></table></div>`}
+function renderTargetPage(){let a=TARGETS;$('targetBody').innerHTML=`<div class="section-title">Target KPI & Revision Control <span style="margin-left:auto">${ACCESS?.is_master?'<button class="primary" onclick="openTarget()">＋ Input / Revisi Target</button>':''}</span></div><div class="hint">Target disimpan per KPI, window, scope dan revision. Target lama tetap tersedia sebagai history.</div><div class="tablewrap" style="margin-top:12px"><table class="tbl"><thead><tr><th>Period</th><th>Window</th><th>KPI</th><th>Scope</th><th>Target</th><th>Revision</th><th>Updated By</th></tr></thead><tbody>${a.map(t=>`<tr><td>${esc(t.period_key)}</td><td>${esc(t.window_label)}</td><td>${esc(t.kpi_code)}</td><td>${esc(t.scope_rdc)}</td><td>≤ ${fmt(t.target_value)}</td><td>Rev ${t.revision_no}</td><td>${esc(t.created_by_name||'—')}</td></tr>`).join('')}</tbody></table></div>`}
+function renderAll(){setupWindow();renderKpis();renderTargetWindow();renderScorecard();renderTrend();renderActions();renderRekapPage();renderIncidentPage();renderReconPage();renderTargetPage();$('who').textContent=`${String(ACCESS.role||'').toUpperCase()} · ${ACCESS.is_master?'Nasional':ACCESS.rdc_name}`;$('pageTitle').textContent=`Monitoring Breakage ${SCOPE==='ALL'?'Nasional':SCOPE}`;$('targetBtn').classList.toggle('hidden',!ACCESS.is_master);$('navTarget').classList.toggle('hidden',!ACCESS.is_master);if(!ACCESS.is_master){$('scope').innerHTML=`<option>${esc(ACCESS.rdc_name)}</option>`;$('scopeCtrl').querySelector('select').disabled=true}}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id==='page-'+p));document.querySelectorAll('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));if(p==='target'&&!ACCESS?.is_master)p='overview'}
+window.showPage=showPage;
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+$('gran').querySelectorAll('button').forEach(b=>b.onclick=()=>{GRAN=b.dataset.g;$('gran').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));setupWindow();renderKpis();renderScorecard();renderRekapPage()});
+$('period').onchange=async e=>{PERIOD=e.target.value;await loadAll()};$('scope').onchange=async e=>{SCOPE=e.target.value;await loadAll()};$('windowSel').onchange=()=>{renderKpis();renderScorecard()};
+$('ctBtn').onclick=()=>window.open('https://sls-supply-chain-control-tower.vercel.app/','_blank');$('logoutBtn').onclick=()=>{sessionStorage.removeItem('sls_breakage_pw');location.reload()};
+// login
+$('loginBtn').onclick=login;$('pw').onkeydown=e=>{if(e.key==='Enter')login()};async function login(){let pw=$('pw').value;$('loginMsg').textContent='';if(!pw){$('loginMsg').textContent='Password wajib.';return}try{PASSWORD=pw;await signIn(pw);sessionStorage.setItem('sls_breakage_pw',pw);PERIOD='2026-09';SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;initPeriods();$('login').style.display='none';$('app').style.display='grid';await loadAll()}catch(e){$('loginMsg').textContent=cleanErr(e.message)}}
+(async()=>{let pw=sessionStorage.getItem('sls_breakage_pw');initPeriods();if(pw){$('pw').value=pw;await login()}})();
+// modal generic
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('show'));$('inputBtn').onclick=openInput;$('targetBtn').onclick=openTarget;
+function openInput(){if(!ACCESS?.can_input){alert('Role ini tidak memiliki hak input incident.');return}$('incidentModal').classList.add('show');$('fRdc').value=ACCESS.is_master?(SCOPE==='ALL'?'Pilih RDC via scope terlebih dahulu':SCOPE):ACCESS.rdc_name;$('fInputBy').value=ACCESS.username||ACCESS.role;$('inputIdentity').textContent=`${String(ACCESS.role).toUpperCase()} · ${$('fRdc').value}`;$('fDate').value=new Date().toISOString().slice(0,10);restoreDraft();renderConditional('delivery');renderPhotos()}
+window.openInput=openInput;
+let TYPE='delivery',CAUSE='Perjalanan',PHOTOS=[];function renderConditional(t){TYPE=t;document.querySelectorAll('#typeTabs button').forEach(b=>b.classList.toggle('active',b.dataset.type===t));let el=$('conditional');if(t==='delivery')el.innerHTML=`<div class="form-grid"><div class="field"><label>No SJ *</label><input id="fSj"></div><div class="field"><label>Customer *</label><input id="fCustomer"></div><div class="field"><label>Transporter *</label><input id="fTransporter"></div><div class="field"><label>Driver *</label><input id="fDriver"></div><div class="field span2"><label>No Polisi *</label><input id="fPolice"></div></div>`;else if(t==='receiving')el.innerHTML=`<div class="form-grid"><div class="field"><label>No SJ *</label><input id="fSj"></div><div class="field"><label>Factory *</label><select id="fFactory"><option value="">Pilih</option><option>SRKI</option><option>RCI</option></select></div><div class="field"><label>Transporter *</label><input id="fTransporter"></div><div class="field"><label>Driver *</label><input id="fDriver"></div><div class="field span2"><label>No Polisi *</label><input id="fPolice"></div></div>`;else el.innerHTML=`<div class="form-grid"><div class="field"><label>Kejadian Gudang *</label><select id="fWhEvent"><option value="Pecah Dalam Pallet">Pecah Dalam Pallet</option><option value="Misshandling">Misshandling</option></select></div><div class="field"><label>Nama terkait (wajib jika Misshandling)</label><input id="fRelated"></div></div>`;bindDraftInputs()}
+$('typeTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>renderConditional(b.dataset.type));$('causeTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{CAUSE=b.dataset.cause;$('causeTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));saveDraft()});
+function formData(){return {type:TYPE,cause:CAUSE,date:$('fDate').value,ba:$('fBa').value,item:$('fItem').value,qty:$('fQty').value,reported:$('fReported').value,sj:$('fSj')?.value||'',factory:$('fFactory')?.value||'',customer:$('fCustomer')?.value||'',transporter:$('fTransporter')?.value||'',driver:$('fDriver')?.value||'',police:$('fPolice')?.value||'',wh:$('fWhEvent')?.value||'',related:$('fRelated')?.value||'',detail:$('fCauseDetail').value}}
+function saveDraft(){localStorage.setItem('sls_breakage_incident_draft',JSON.stringify(formData()));$('draftStatus').textContent='☁ Draft otomatis tersimpan'}
+function restoreDraft(){try{let d=JSON.parse(localStorage.getItem('sls_breakage_incident_draft')||'{}');TYPE=d.type||'delivery';CAUSE=d.cause||'Perjalanan';renderConditional(TYPE);[['fDate','date'],['fBa','ba'],['fItem','item'],['fQty','qty'],['fReported','reported'],['fCauseDetail','detail']].forEach(([id,k])=>{if(d[k])$(id).value=d[k]});setTimeout(()=>{[['fSj','sj'],['fFactory','factory'],['fCustomer','customer'],['fTransporter','transporter'],['fDriver','driver'],['fPolice','police'],['fWhEvent','wh'],['fRelated','related']].forEach(([id,k])=>{if($(id)&&d[k])$(id).value=d[k]})},0);$('causeTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.cause===CAUSE))}catch{}}
+function bindDraftInputs(){document.querySelectorAll('#incidentModal input,#incidentModal select,#incidentModal textarea').forEach(x=>{if(x.id!=='fPhotos')x.oninput=saveDraft})}bindDraftInputs();$('saveDraft').onclick=saveDraft;
+$('fPhotos').onchange=e=>{let arr=Array.from(e.target.files||[]);if(arr.length>5){alert('Maksimal 5 foto.');e.target.value='';return}PHOTOS=arr;renderPhotos()};function renderPhotos(){$('photoPreview').innerHTML=[0,1,2,3,4].map(i=>`<div class="ph">${PHOTOS[i]?`<img src="${URL.createObjectURL(PHOTOS[i])}"><b>${i+1}</b>`:`<b>${i+1}</b>`}</div>`).join('')}
+function validateIncident(){let d=formData(),m=[];if(!d.date)m.push('Tanggal');if(!d.ba)m.push('No BA');if(!d.item)m.push('Kode Item');if(!(Number(d.qty)>0))m.push('Qty');if(!d.reported)m.push('Reported By');if(PHOTOS.length<1)m.push('Foto');if(TYPE==='delivery'){if(!d.sj)m.push('No SJ');if(!d.customer)m.push('Customer');if(!d.transporter)m.push('Transporter');if(!d.driver)m.push('Driver');if(!d.police)m.push('No Polisi')}if(TYPE==='receiving'){if(!d.sj)m.push('No SJ');if(!d.factory)m.push('Factory');if(!d.transporter)m.push('Transporter');if(!d.driver)m.push('Driver');if(!d.police)m.push('No Polisi')}if(TYPE==='warehouse'&&d.wh==='Misshandling'&&!d.related)m.push('Nama terkait');if(CAUSE==='Lainnya'&&!d.detail)m.push('Keterangan penyebab');return m}
+async function uploadEvidence(files,rdc){let batch='draft_'+crypto.randomUUID(),paths=[];for(let i=0;i<files.length;i++){let f=files[i],ext=(f.name.split('.').pop()||'jpg').toLowerCase(),safe=String(rdc).replace(/[^A-Za-z0-9_-]/g,'_'),path=`${safe}/${batch}/${Date.now()}_${i+1}.${ext}`;let r=await fetch(`${SUPABASE_URL}/storage/v1/object/breakage-evidence/${encodeURI(path)}`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${auth()}`,'Content-Type':f.type||'image/jpeg','x-upsert':'false'},body:f});if(!r.ok)throw new Error('Upload foto gagal: '+await r.text());paths.push(path)}return paths}
+$('submitIncident').onclick=async()=>{let miss=validateIncident(),msg=$('inputMsg');if(miss.length){msg.classList.remove('hidden');msg.textContent='Mohon lengkapi: '+miss.join(', ');return}if(ACCESS.is_master&&SCOPE==='ALL'){msg.classList.remove('hidden');msg.textContent='Master harus memilih RDC pada scope sebelum input.';return}let b=$('submitIncident');b.disabled=true;msg.classList.remove('hidden');msg.textContent='Menyimpan evidence dan incident…';try{let d=formData(),rdc=ACCESS.is_master?SCOPE:ACCESS.rdc_name,paths=await uploadEvidence(PHOTOS,rdc);let payload={incident_type:TYPE,occurrence_date:d.date,item_code:d.item,qty_box:Number(d.qty),uom:'BOX',rdc_name:rdc,no_ba:d.ba.toUpperCase(),reported_by:d.reported,no_sj:d.sj,factory:d.factory,customer:d.customer,transporter:d.transporter,driver_name:d.driver,vehicle_no:d.police.toUpperCase(),cause:CAUSE,cause_detail:d.detail,warehouse_event:d.wh,related_person:d.related,photo_paths:paths};let res=await rpc('breakage_incident_create_v44',{p_payload:payload});msg.style.color='#079455';msg.textContent=`✓ Tersimpan ${res.incident_no} · BA ${res.no_ba}`;localStorage.removeItem('sls_breakage_incident_draft');PHOTOS=[];setTimeout(async()=>{$('incidentModal').classList.remove('show');await loadAll();showPage('incident')},900)}catch(e){msg.style.color='#c42d26';msg.textContent='Gagal: '+cleanErr(e.message)}finally{b.disabled=false}};
+// target modal
+function windowOptions(period){return period==='2026-09'?[['W1-W2',1,'W1–W2 · Baseline / Control'],['W3-W4',2,'W3–W4 · End Sep']]:[['W5-W6',3,'W5–W6 · Target'],['W7-W8',4,'W7–W8 · End Oct']]}
+function syncTargetWindow(){let p=$('tPeriod').value;$('tWindow').innerHTML=windowOptions(p).map(x=>`<option value="${x[0]}" data-order="${x[1]}" data-label="${x[2]}">${x[2]}</option>`).join('');prefillTarget()}
+function prefillTarget(){let k=$('tKpi').value,p=$('tPeriod').value,w=$('tWindow').value,s=$('tScope').value,t=TARGETS.find(x=>x.kpi_code===k&&x.period_key===p&&x.window_code===w&&(x.scope_rdc===s||x.scope_rdc==='ALL'));$('tValue').value=t?.target_value??'';$('tObjective').value=t?.objective??''}
+async function openTarget(){if(!ACCESS?.is_master){alert('Hanya Master dapat mengubah target KPI.');return}$('targetModal').classList.add('show');syncTargetWindow();await loadTargetHistory()};window.openTarget=openTarget;
+['tKpi','tScope','tPeriod','tWindow'].forEach(id=>$(id).onchange=()=>{if(id==='tPeriod')syncTargetWindow();else prefillTarget()});async function loadTargetHistory(){try{let h=await rpc('breakage_target_history_v45',{p_scope:$('tScope').value});$('targetHistory').innerHTML=`<table class="tbl"><thead><tr><th>Window</th><th>KPI</th><th>Scope</th><th>Target</th><th>Rev</th><th>Status</th><th>By</th></tr></thead><tbody>${h.slice(0,20).map(x=>`<tr><td>${esc(x.window_label)}</td><td>${esc(x.kpi_code)}</td><td>${esc(x.scope_rdc)}</td><td>${fmt(x.target_value)}</td><td>${x.revision_no}</td><td>${esc(x.status)}</td><td>${esc(x.created_by_name||'—')}</td></tr>`).join('')}</tbody></table>`}catch(e){$('targetHistory').textContent=cleanErr(e.message)}}
+$('saveTarget').onclick=async()=>{let sel=$('tWindow').selectedOptions[0],payload={program_code:'BREAKAGE_REDUCTION_SEP_OCT_2026',period_key:$('tPeriod').value,window_code:$('tWindow').value,window_order:Number(sel.dataset.order),window_label:sel.dataset.label,kpi_code:$('tKpi').value,scope_rdc:$('tScope').value,target_value:Number($('tValue').value),objective:$('tObjective').value,revision_reason:$('tReason').value},msg=$('targetMsg');if(!payload.revision_reason||!(payload.target_value>=0)){msg.classList.remove('hidden');msg.textContent='Target dan alasan revisi wajib diisi.';return}try{let r=await rpc('breakage_target_save_v45',{p_payload:payload});msg.classList.remove('hidden');msg.style.color='#079455';msg.textContent=`✓ Target tersimpan sebagai Revision ${r.revision_no}`;TARGETS=await rpc('breakage_target_matrix_v45',{p_scope:SCOPE});await loadTargetHistory();renderAll()}catch(e){msg.classList.remove('hidden');msg.style.color='#c42d26';msg.textContent='Gagal: '+cleanErr(e.message)}};
+// reconciliation wizard preserving existing v43 logic
+const PLATE_RE=/\b[A-Z]{1,2}\s?\d{3,5}\s?[A-Z]{1,3}\b/;let UPLOAD=null;
+function classify(dht,mvt){let t=String(dht||'').toUpperCase();if(PLATE_RE.test(t))return{main:'delivery',sub:'Transport'};if(mvt==='602')return{main:'delivery',sub:'Loading'};if(/PECAH/.test(t)&&/PALET|PALLET/.test(t))return{main:'warehouse',sub:'Packaging / Pallet'};if(/PERSIAPAN/.test(t))return{main:'warehouse',sub:'Handling / Picking'};if(/PERAPIHAN|\bSO\b|STOCK OPNAME|GUDANG/.test(t))return{main:'warehouse',sub:'Storage / Penyimpanan'};return{main:'warehouse',sub:'Other'}}
+function parseMB51(wb){let sn=wb.SheetNames.find(n=>{let g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}),h=(g[0]||[]).map(x=>String(x||'').trim());return h.includes('Posting Date')&&h.includes('Movement Type')&&h.includes('Storage Location')});if(!sn)return null;let g=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true,cellDates:true}),h=g[0].map(x=>String(x||'').trim()),c=n=>h.indexOf(n),cd=c('Posting Date'),cq=c('Quantity'),cs=c('Storage Location'),cm=c('Movement Type'),ch=c('Document Header Text'),cr=c('Name 1'),cma=c('Material'),cde=c('Material Description'),cdo=c('Material Document');if([cd,cq,cs,cm,ch,cr].some(x=>x<0))return null;let out=[];for(let i=1;i<g.length;i++){let r=g[i],mt=String(r[cm]||'').trim(),q=Number(r[cq])||0,d=r[cd];if(!(d instanceof Date))continue;let sl=String(r[cs]||''),cls,qty;if(mt==='311'&&sl==='RFB1'&&q>0){qty=q;cls=classify(r[ch],mt)}else if(mt==='602'){qty=Math.abs(q);cls=classify(r[ch],mt)}else continue;let rdc=String(r[cr]||'').trim().replace(/^RDC\s+/i,'');out.push({rdc,period:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01',posting_date:d.toISOString().slice(0,10),main_category:cls.main,sub_category:cls.sub,material:cma>=0?String(r[cma]||''):'',material_desc:cde>=0?String(r[cde]||''):'',qty,sap_document:cdo>=0?String(r[cdo]||''):'',driver_vendor:cls.sub==='Transport'?String(r[ch]||''):'',movement_type:mt,storage_location:sl,document_header_text:String(r[ch]||'')})}return out.length?out:null}
+function steps(n){return `<div class="steps">${['Upload SAP','Preview','Reconcile','Publish'].map((x,i)=>`<div class="step ${i+1<=n?'active':''}"><i>${i+1<n?'✓':i+1}</i>${x}</div>`).join('')}</div>`}
+function openRecon(){if(!ACCESS?.is_master&&ACCESS?.role!=='rdc_manager'){/* existing stage will enforce actual role */}$('reconModal').classList.add('show');recon1()}window.openRecon=openRecon;
+function recon1(){$('reconWizard').innerHTML=steps(1)+`<div class="photo-area" style="text-align:center;padding:34px"><b>Upload SAP MB51</b><div class="smallnote" style="margin:8px">Format .xlsx / .xls · parser existing Movement 311 → RFB1 & reversal 602</div><label for="mb51" class="secondary" style="display:inline-block">Pilih File</label><input type="file" id="mb51" accept=".xlsx,.xls" hidden><div id="mbmsg" style="margin-top:10px"></div></div>`;$('mb51').onchange=e=>{if(e.target.files[0])handleMB(e.target.files[0])}}
+function handleMB(file){let msg=$('mbmsg');msg.textContent='Membaca file…';let fr=new FileReader();fr.onload=async e=>{try{let wb=XLSX.read(e.target.result,{type:'binary',cellDates:true}),rows=parseMB51(wb);if(!rows)throw new Error('File MB51 tidak dikenali / kolom wajib tidak ditemukan.');let res=await rpc('breakage_stage',{p_filename:file.name,p_rows:rows});UPLOAD=res;recon2(res)}catch(x){msg.textContent='Gagal: '+cleanErr(x.message)}};fr.readAsBinaryString(file)}
+function recon2(r){let cats=Object.entries(r.by_category||{});$('reconWizard').innerHTML=steps(2)+`<div class="section-title">${esc(r.rdc)} · ${esc(r.period)} · ${fmt(r.total_rows)} baris</div><table class="tbl"><thead><tr><th>Kategori</th><th>Sub</th><th>Qty</th><th>Rows</th></tr></thead><tbody>${cats.map(([k,v])=>{let[m,s]=k.split('|');return`<tr><td>${esc(m)}</td><td>${esc(s)}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rows)}</td></tr>`}).join('')}</tbody></table><button class="primary" style="margin-top:12px" id="reconNext">Lanjut Reconciliation →</button>`;$('reconNext').onclick=recon3}
+async function recon3(){$('reconWizard').innerHTML=steps(3)+'<div class="empty">Membandingkan dengan existing…</div>';try{let r=await rpc('breakage_reconcile',{p_upload_id:UPLOAD.upload_batch_id}),rows=r.detail||[];$('reconWizard').innerHTML=steps(3)+`<div class="tablewrap"><table class="tbl"><thead><tr><th>Kategori</th><th>Sub</th><th>Existing</th><th>SAP</th><th>Variance</th><th>Status</th><th>Decision</th></tr></thead><tbody>${rows.map((x,i)=>`<tr><td>${esc(x.main_category)}</td><td>${esc(x.sub_category)}</td><td>${fmt(x.existing_qty)}</td><td>${fmt(x.sap_qty)}</td><td>${fmt(x.variance)}</td><td>${esc(x.status)}</td><td><select id="dec${i}"><option value="USE_SAP" ${x.status!=='MATCH'?'selected':''}>Pakai Data SAP</option><option value="KEEP_EXISTING">Pertahankan Existing</option><option value="SKIP">Lewati</option></select></td></tr>`).join('')}</tbody></table></div><button class="primary" style="margin-top:12px" id="pubNext">Lanjut Confirm & Publish →</button>`;$('pubNext').onclick=()=>recon4(rows.map((x,i)=>({main_category:x.main_category,sub_category:x.sub_category,action:$('dec'+i).value})))}catch(e){$('reconWizard').innerHTML='<div class="errorbox">'+esc(cleanErr(e.message))+'</div>'}}
+function recon4(dec){$('reconWizard').innerHTML=steps(4)+`<div class="hint">Publish hanya setelah review. Keputusan ini akan menjadi monthly transactional control.</div><div id="pubmsg" style="margin:12px 0"></div><button class="primary" id="publish">✓ Confirm & Publish</button>`;$('publish').onclick=async()=>{try{$('pubmsg').textContent='Publishing…';await rpc('breakage_publish',{p_upload_id:UPLOAD.upload_batch_id,p_decisions:dec});$('pubmsg').innerHTML='<span class="good">✓ Published.</span>';setTimeout(async()=>{$('reconModal').classList.remove('show');await loadAll()},900)}catch(e){$('pubmsg').textContent='Gagal: '+cleanErr(e.message)}}}
+function exportExcel(){let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(RDCROWS),'RDC Comparison');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(INCIDENTS),'Incident');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(TARGETS),'Target KPI');XLSX.writeFile(wb,`SLS_Breakage_${PERIOD}_${SCOPE}.xlsx`)}window.exportExcel=exportExcel;
+function toast(msg,type){console[type==='bad'?'error':'log'](msg)}
 </script>
 </body>
 </html>
