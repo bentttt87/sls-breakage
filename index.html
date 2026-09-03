@@ -21,7 +21,8 @@ button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:2
   <div class="login-box">
     <div class="login-brand"><div id="loginLogo"></div><div><h2>SLS Breakage Monitoring</h2><div class="smallnote">Aplikasi operasional · database Claw yang sama</div></div></div>
     <label style="font-size:11px;font-weight:800">Password</label>
-    <input id="pw" type="password" autocomplete="current-password" placeholder="Masukkan password" />
+    <input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="User ID (contoh: wms.jkt.spv)" />
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Password" />
     <button class="primary" id="loginBtn">Masuk</button>
     <div class="login-msg" id="loginMsg"></div>
     <div class="smallnote" style="margin-top:12px">Login mengikuti akun SLS existing. Scope RDC dan hak akses divalidasi backend.</div>
@@ -118,7 +119,7 @@ button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:2
 <script>
 const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
 const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
-let SESSION=null, ACCESS=null, PASSWORD='', PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[];
+let SESSION=null, ACCESS=null, PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[];
 const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt=v=>v==null?'—':Number(v).toLocaleString('id-ID',{maximumFractionDigits:2}); const rate=v=>v==null?'DATA REQUIRED':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -126,7 +127,7 @@ function logoSvg(size=58){return `<svg class="roman" width="${size}" viewBox="0 
 $('loginLogo').innerHTML=logoSvg(64);$('sideLogo').innerHTML=logoSvg(58);$('modalLogo').innerHTML=logoSvg(42);
 function auth(){return SESSION?.access_token||PUBLIC_ANON}
 async function rpc(fn,params={}){const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${auth()}`,'Content-Type':'application/json'},body:JSON.stringify(params)});if(!r.ok)throw new Error(await r.text());return r.json()}
-async function signIn(pw){const email=await rpc('get_login_email',{input_password:pw});if(!email)throw new Error('Password salah.');const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{apikey:PUBLIC_ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});if(!r.ok)throw new Error('Login Supabase gagal.');SESSION=await r.json();ACCESS=await rpc('breakage_my_access_v44',{});}
+async function signIn(username,pw){username=String(username||'').trim().toLowerCase();if(!username||!pw)throw new Error('User ID dan password wajib.');const email=await rpc('get_login_email',{input_username:username,input_password:pw});if(!email)throw new Error('User ID atau password salah.');const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{apikey:PUBLIC_ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});if(!r.ok)throw new Error('Login gagal. Periksa User ID dan password.');SESSION=await r.json();ACCESS=await rpc('breakage_my_access_v44',{});sessionStorage.setItem('sls_breakage_session',JSON.stringify({access_token:SESSION.access_token,refresh_token:SESSION.refresh_token,expires_at:SESSION.expires_at,token_type:SESSION.token_type,user:SESSION.user}));sessionStorage.setItem('sls_breakage_username',username);}
 function monthName(p){const [y,m]=p.split('-').map(Number);return new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))}
 function initPeriods(){const s=$('period');let a=[];for(let m=1;m<=12;m++)a.push(`2026-${String(m).padStart(2,'0')}`);s.innerHTML=a.map(p=>`<option value="${p}" ${p===PERIOD?'selected':''}>${monthName(p)}</option>`).join('')}
 function scopeForRpc(){return ACCESS?.is_master?SCOPE:(ACCESS?.rdc_name||SCOPE)}
@@ -165,10 +166,12 @@ window.showPage=showPage;
 document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 $('gran').querySelectorAll('button').forEach(b=>b.onclick=()=>{GRAN=b.dataset.g;$('gran').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));setupWindow();renderKpis();renderScorecard();renderRekapPage()});
 $('period').onchange=async e=>{PERIOD=e.target.value;await loadAll()};$('scope').onchange=async e=>{SCOPE=e.target.value;await loadAll()};$('windowSel').onchange=()=>{renderKpis();renderScorecard()};
-$('ctBtn').onclick=()=>window.open('https://sls-supply-chain-control-tower.vercel.app/','_blank');$('logoutBtn').onclick=()=>{sessionStorage.removeItem('sls_breakage_pw');location.reload()};
+$('ctBtn').onclick=()=>window.open('https://sls-supply-chain-control-tower.vercel.app/','_blank');$('logoutBtn').onclick=async()=>{try{if(SESSION?.access_token)await fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${SESSION.access_token}`}})}catch(_){}sessionStorage.removeItem('sls_breakage_session');sessionStorage.removeItem('sls_breakage_username');location.reload()};
 // login
-$('loginBtn').onclick=login;$('pw').onkeydown=e=>{if(e.key==='Enter')login()};async function login(){let pw=$('pw').value;$('loginMsg').textContent='';if(!pw){$('loginMsg').textContent='Password wajib.';return}try{PASSWORD=pw;await signIn(pw);sessionStorage.setItem('sls_breakage_pw',pw);PERIOD='2026-09';SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;initPeriods();$('login').style.display='none';$('app').style.display='grid';await loadAll()}catch(e){$('loginMsg').textContent=cleanErr(e.message)}}
-(async()=>{let pw=sessionStorage.getItem('sls_breakage_pw');initPeriods();if(pw){$('pw').value=pw;await login()}})();
+$('loginBtn').onclick=login;['username','pw'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter')login()});
+async function login(){let username=$('username').value.trim(),pw=$('pw').value;$('loginMsg').textContent='';if(!username||!pw){$('loginMsg').textContent='User ID dan password wajib.';return}try{await signIn(username,pw);PERIOD='2026-09';SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;initPeriods();$('login').style.display='none';$('app').style.display='grid';await loadAll()}catch(e){$('loginMsg').textContent=cleanErr(e.message)}}
+async function restoreSession(){initPeriods();$('username').value=sessionStorage.getItem('sls_breakage_username')||'';let raw=sessionStorage.getItem('sls_breakage_session');if(!raw)return;try{SESSION=JSON.parse(raw);if(!SESSION?.access_token)throw new Error('invalid session');ACCESS=await rpc('breakage_my_access_v44',{});PERIOD='2026-09';SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;$('login').style.display='none';$('app').style.display='grid';await loadAll()}catch(e){sessionStorage.removeItem('sls_breakage_session')}}
+restoreSession();
 // modal generic
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('show'));$('inputBtn').onclick=openInput;$('targetBtn').onclick=openTarget;
 function openInput(){if(!ACCESS?.can_input){alert('Role ini tidak memiliki hak input incident.');return}$('incidentModal').classList.add('show');$('fRdc').value=ACCESS.is_master?(SCOPE==='ALL'?'Pilih RDC via scope terlebih dahulu':SCOPE):ACCESS.rdc_name;$('fInputBy').value=ACCESS.username||ACCESS.role;$('inputIdentity').textContent=`${String(ACCESS.role).toUpperCase()} · ${$('fRdc').value}`;$('fDate').value=new Date().toISOString().slice(0,10);restoreDraft();renderConditional('delivery');renderPhotos()}
