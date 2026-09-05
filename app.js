@@ -41,3 +41,4 @@ function exactDeliveryRate(r){let d=Number(r?.delivered_box||0);return d>0?Numbe
 function exactWarehouseRate(r){let d=Number(r?.stock_exposure_box||0);return d>0?Number(r?.warehouse_breakage_box||0)/d*10000:null}
 function baselineFallback(kpi){let live=kpi==='delivery'?OVERVIEW?.delivery?.rate:OVERVIEW?.warehouse?.rate;if(live!=null)return {value:Number(live),isBaseline:false,row:null};let b=baselineRow(2026);let v=kpi==='delivery'?baselineDeliveryRate(b):(b?.warehouse_rate!=null?Number(b.warehouse_rate):null);return {value:v,isBaseline:v!=null,row:b}}
 
+document.write('<script src="bundle2.js"><\/script><script src="bundle3.js"><\/script><script src="bundle4.js"><\/script><script src="bundle5.js"><\/script><script src="bundle6.js"><\/script>');
