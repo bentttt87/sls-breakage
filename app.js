@@ -3,7 +3,7 @@ const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
 const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
 let SESSION=null, ACCESS=null, PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], KPI_SETTINGS=[], CUTOFFS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[], BASELINE25=null, BASELINE26=null, EXPOSURE=null, MOVEH=[], MOVEMAP=[];
 const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
-const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
 const fmt=v=>v==null?'—':Number(v).toLocaleString('id-ID',{maximumFractionDigits:2}); const rate=v=>v==null?'DATA REQUIRED':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
 function logoSvg(size=58){return `<svg class="roman" width="${size}" viewBox="0 0 100 80" aria-label="ROMAN"><path d="M12 47A38 38 0 0 1 88 47" fill="none" stroke="#ef1b2d" stroke-width="12"/><path d="M23 47A27 27 0 0 1 77 47" fill="none" stroke="#ffd21d" stroke-width="8"/><path d="M17 49h66l-8 10H25z" fill="#061b3c"/><circle cx="50" cy="48" r="8" fill="#ffd21d" stroke="#061b3c" stroke-width="4"/><text x="50" y="75" text-anchor="middle" font-size="18" font-weight="900" font-style="italic" fill="#ef1b2d">ROMAN</text></svg>`}
 $('loginLogo').innerHTML=logoSvg(64);$('sideLogo').innerHTML=logoSvg(58);$('modalLogo').innerHTML=logoSvg(42);
@@ -41,4 +41,4 @@ function exactDeliveryRate(r){let d=Number(r?.delivered_box||0);return d>0?Numbe
 function exactWarehouseRate(r){let d=Number(r?.stock_exposure_box||0);return d>0?Number(r?.warehouse_breakage_box||0)/d*10000:null}
 function baselineFallback(kpi){let live=kpi==='delivery'?OVERVIEW?.delivery?.rate:OVERVIEW?.warehouse?.rate;if(live!=null)return {value:Number(live),isBaseline:false,row:null};let b=baselineRow(2026);let v=kpi==='delivery'?baselineDeliveryRate(b):(b?.warehouse_rate!=null?Number(b.warehouse_rate):null);return {value:v,isBaseline:v!=null,row:b}}
 
-document.write('<script src="bundle2.js"><\/script><script src="bundle3.js"><\/script><script src="bundle4.js"><\/script><script src="bundle5.js"><\/script><script src="bundle6.js"><\/script>');
+document.write('<script src="bundle2.js"><\/script><script src="bundle3.js"><\/script><script src="bundle4.js"><\/script><script src="bundle5.js"><\/script><script src="bundle6.js"><\/script><script src="workflow.js"><\/script>');
