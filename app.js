@@ -3,7 +3,7 @@ const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
 const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
 let SESSION=null, ACCESS=null, PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], KPI_SETTINGS=[], CUTOFFS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[], BASELINE25=null, BASELINE26=null, EXPOSURE=null, MOVEH=[], MOVEMAP=[];
 const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
-const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
+const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt=v=>v==null?'—':Number(v).toLocaleString('id-ID',{maximumFractionDigits:2}); const rate=v=>v==null?'DATA REQUIRED':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
 function logoSvg(size=58){return `<svg class="roman" width="${size}" viewBox="0 0 100 80" aria-label="ROMAN"><path d="M12 47A38 38 0 0 1 88 47" fill="none" stroke="#ef1b2d" stroke-width="12"/><path d="M23 47A27 27 0 0 1 77 47" fill="none" stroke="#ffd21d" stroke-width="8"/><path d="M17 49h66l-8 10H25z" fill="#061b3c"/><circle cx="50" cy="48" r="8" fill="#ffd21d" stroke="#061b3c" stroke-width="4"/><text x="50" y="75" text-anchor="middle" font-size="18" font-weight="900" font-style="italic" fill="#ef1b2d">ROMAN</text></svg>`}
 $('loginLogo').innerHTML=logoSvg(64);$('sideLogo').innerHTML=logoSvg(58);$('modalLogo').innerHTML=logoSvg(42);
@@ -33,7 +33,7 @@ function targetFor(kpi,gran=GRAN){let rows=targetRows().filter(x=>x.kpi_code===k
 function setupWindow(){let rows=[...new Map(targetRows().map(x=>[x.window_code,x])).values()];$('windowSel').innerHTML=rows.map(x=>`<option value="${x.window_code}">${esc(x.window_label)}</option>`).join('');$('windowCtrl').classList.toggle('hidden',GRAN==='monthly'||!rows.length)}
 function targetGap(actual,kpi){const t=targetFor(kpi);return actual==null||!t?null:Number(actual)-Number(t.target_value)}
 function pillFor(actual,kpi){const g=targetGap(actual,kpi);if(g==null)return '<span class="status-pill s-watch">DATA REQUIRED</span>';return g<=0?'<span class="status-pill s-good">Baik</span>':g<=.25?'<span class="status-pill s-watch">Perlu Perhatian</span>':'<span class="status-pill s-bad">Perlu Tindakan</span>'}
-function receivingQty(){return INCIDENTS.filter(i=>i.incident_type==='receiving').reduce((a,b)=>a+Number(b.qty_box||0),0)}
+function receivingQty(){return INCIDENTS.filter(i=>i.incident_type==='receiving').reduce((a,b)=>a+Number(i.qty_box||0),0)}
 function baselineRow(year=2026){let b=year===2026?BASELINE26:BASELINE25;if(!b)return null;if(SCOPE==='ALL')return b.national||null;return (b.rows||[]).find(x=>x.rdc===SCOPE)||null}
 function pctGrowth(a,b){a=Number(a||0);b=Number(b||0);if(a===0)return b===0?'—':'N/A';let v=(b-a)/a*100;return `${v>=0?'+':''}${v.toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})}%`}
 function baselineDeliveryRate(r){if(!r)return null;if(r.delivery_rate!=null)return Number(r.delivery_rate);let d=Number(r.delivered_box||0);return d>0?Number(r.delivery_breakage_box||0)/d*10000:null}
