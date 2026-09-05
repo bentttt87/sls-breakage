@@ -1,6 +1,6 @@
 const BREAKAGE_INPUT_URL='https://sls-breakage-input.vercel.app/';
 const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
-const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJtdmZkY2tuZ2t2am5lbXdnbWtpaXYiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4NjAwNzEyNSwiZXhwIjoyMTAxNTgzMTI1fQ.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
+const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
 let SESSION=null, ACCESS=null, PERIOD='2026-09', SCOPE='ALL', GRAN='monthly', TARGETS=[], KPI_SETTINGS=[], CUTOFFS=[], OVERVIEW=null, INCIDENTS=[], RDCROWS=[], TREND=[], BASELINE25=null, BASELINE26=null, EXPOSURE=null, MOVEH=[], MOVEMAP=[];
 const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -41,4 +41,4 @@ function exactDeliveryRate(r){let d=Number(r?.delivered_box||0);return d>0?Numbe
 function exactWarehouseRate(r){let d=Number(r?.stock_exposure_box||0);return d>0?Number(r?.warehouse_breakage_box||0)/d*10000:null}
 function baselineFallback(kpi){let live=kpi==='delivery'?OVERVIEW?.delivery?.rate:OVERVIEW?.warehouse?.rate;if(live!=null)return {value:Number(live),isBaseline:false,row:null};let b=baselineRow(2026);let v=kpi==='delivery'?baselineDeliveryRate(b):(b?.warehouse_rate!=null?Number(b.warehouse_rate):null);return {value:v,isBaseline:v!=null,row:b}}
 
-document.write('<script src="bundle2.js"><\/script><script src="bundle3.js"><\/script><script src="bundle4.js"><\/script><script src="bundle5.js"><\/script><script src="bundle6.js"><\/script><script src="workflow.js"><\/script>');
+document.write('<script src="bundle2.js"><\/script><script src="bundle3.js"><\/script><script src="bundle4.js"><\/script><script src="bundle5.js"><\/script><script src="bundle6.js"><\/script>');
