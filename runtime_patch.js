@@ -1,13 +1,26 @@
-// SLS Breakage Monitoring runtime hardening v53
+// SLS Breakage Monitoring runtime hardening v54
 (function(){
-  const PATCH_VERSION='v53-auth-workflow-ui-20260906';
+  const PATCH_VERSION='v54-auth-workflow-ui-20260906';
+  const BUILD_LABEL='BUILD v54';
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  function ensureBuildBadge(){
+    if(document.getElementById('slsMonBuildBadge'))return;
+    const bar=document.querySelector('.topbar');if(!bar)return;
+    const el=document.createElement('span');el.id='slsMonBuildBadge';el.textContent=BUILD_LABEL;
+    el.style.cssText='font-size:9px;font-weight:800;letter-spacing:.4px;padding:4px 7px;border:1px solid #ccd7e7;border-radius:999px;color:#52617a;background:#fff;white-space:nowrap';
+    const ct=$('ctBtn');bar.insertBefore(el,ct||null);
+  }
 
   function saveSession(){
     if(SESSION) sessionStorage.setItem('sls_breakage_session',JSON.stringify(SESSION));
   }
   function jwtExp(token){
-    try{const p=JSON.parse(atob(String(token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return Number(p.exp||0)}catch(_e){return 0}
+    try{
+      let s=String(token||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+      s+='='.repeat((4-s.length%4)%4);
+      const p=JSON.parse(atob(s));return Number(p.exp||0)
+    }catch(_e){return 0}
   }
   function expiresSoon(){
     const exp=Number(SESSION?.expires_at||jwtExp(SESSION?.access_token));
@@ -63,6 +76,7 @@
   window.openBreakageInput=function(){window.open(BREAKAGE_INPUT_URL,'_blank','noopener')};
 
   function alignWorkflowUi(){
+    ensureBuildBadge();
     const hs=document.querySelector('.head-sub');
     if(hs&&hs.children[0]) hs.children[0].textContent='↔ Incident diinput Admin RDC → direview/approve SPV RDC → direview/final Master.';
     const inputBtn=$('inputBtn');
@@ -81,14 +95,10 @@
     }
   }
 
-  // renderAll() was defined before this patch is loaded. Wrap it so role-based controls
-  // stay correct after login, period/scope changes, and every loadAll refresh.
   if(typeof renderAll==='function'){
     const baseRenderAll=renderAll;
     renderAll=function(){const out=baseRenderAll.apply(this,arguments);alignWorkflowUi();return out};
   }
-
-  // Fresh login receives ACCESS inside signIn(); align immediately after that too.
   if(typeof signIn==='function'){
     const baseSignIn=signIn;
     signIn=async function(){const out=await baseSignIn.apply(this,arguments);alignWorkflowUi();return out};
