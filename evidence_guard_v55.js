@@ -1,8 +1,8 @@
-// SLS Breakage Monitoring v56 — production workflow/evidence guard.
+// SLS Breakage Monitoring v57 — production workflow/evidence guard.
 // Enforces 1 evidence photo per broken BOX, locks auto-generated BA,
 // and standardizes Master free-text adjustments.
 (function(){
-  const BUILD_LABEL='BUILD v56';
+  const BUILD_LABEL='BUILD v57';
   let EVIDENCE_URLS=[];
 
   function setBuild(){const el=document.getElementById('slsMonBuildBadge');if(el)el.textContent=BUILD_LABEL}
@@ -97,5 +97,5 @@
   }
   window.adjustIncidentV56=adjustIncidentV56;
 
-  setBuild();setTimeout(setBuild,400);window.__SLS_BREAKAGE_MONITORING_EVIDENCE_GUARD='v56';
+  setBuild();setTimeout(setBuild,400);window.__SLS_BREAKAGE_MONITORING_EVIDENCE_GUARD='v57';
 })();
