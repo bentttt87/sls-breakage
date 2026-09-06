@@ -1,6 +1,6 @@
-// SLS Breakage Monitoring runtime hardening v52
+// SLS Breakage Monitoring runtime hardening v53
 (function(){
-  const PATCH_VERSION='v52-auth-workflow-20260906';
+  const PATCH_VERSION='v53-auth-workflow-ui-20260906';
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
   function saveSession(){
@@ -65,14 +65,36 @@
   function alignWorkflowUi(){
     const hs=document.querySelector('.head-sub');
     if(hs&&hs.children[0]) hs.children[0].textContent='↔ Incident diinput Admin RDC → direview/approve SPV RDC → direview/final Master.';
-    const inputBtn=$('inputBtn');if(inputBtn)inputBtn.onclick=window.openBreakageInput;
+    const inputBtn=$('inputBtn');
+    if(inputBtn){
+      inputBtn.textContent='↗ Buka Breakage Input';
+      inputBtn.onclick=window.openBreakageInput;
+      inputBtn.classList.remove('hidden');
+    }
+    // Legacy embedded incident input is retained in source only for backward compatibility;
+    // operational input must go to the separate Breakage Input app.
     const modal=$('incidentModal');if(modal)modal.setAttribute('data-legacy-input','disabled');
     if(ACCESS){
-      if($('navTarget'))$('navTarget').classList.toggle('hidden',!ACCESS.is_master);
-      if($('targetBtn'))$('targetBtn').classList.toggle('hidden',!ACCESS.is_master);
+      const master=!!ACCESS.is_master;
+      if($('navTarget'))$('navTarget').classList.toggle('hidden',!master);
+      if($('targetBtn'))$('targetBtn').classList.toggle('hidden',!master);
     }
   }
+
+  // renderAll() was defined before this patch is loaded. Wrap it so role-based controls
+  // stay correct after login, period/scope changes, and every loadAll refresh.
+  if(typeof renderAll==='function'){
+    const baseRenderAll=renderAll;
+    renderAll=function(){const out=baseRenderAll.apply(this,arguments);alignWorkflowUi();return out};
+  }
+
+  // Fresh login receives ACCESS inside signIn(); align immediately after that too.
+  if(typeof signIn==='function'){
+    const baseSignIn=signIn;
+    signIn=async function(){const out=await baseSignIn.apply(this,arguments);alignWorkflowUi();return out};
+  }
+
   setTimeout(alignWorkflowUi,0);
-  setTimeout(alignWorkflowUi,400);
+  setTimeout(alignWorkflowUi,500);
   window.__SLS_BREAKAGE_MONITORING_PATCH=PATCH_VERSION;
 })();
