@@ -1,179 +1,211 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#062b61">
 <title>SLS Breakage Monitoring</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="style.css">
+<style>
+:root{--navy:#052e66;--navy2:#001c43;--blue:#1675d1;--blue2:#eaf4ff;--ink:#102746;--muted:#6d7d94;--line:#dbe4ef;--bg:#f4f7fb;--white:#fff;--green:#0a8f5c;--red:#d92d20;--amber:#d97706;--soft:#f8fbff;--shadow:0 10px 32px rgba(10,45,90,.08)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.login{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#001b3e,#0b4d93);display:flex;align-items:center;justify-content:center;padding:22px}.login-box{width:min(390px,100%);background:#fff;border-radius:20px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.28)}.brandrow{display:flex;align-items:center;gap:13px}.brandrow h1{font-size:21px;margin:0 0 4px}.sub{font-size:11px;color:var(--muted);line-height:1.5}.login label{display:block;font-size:11px;font-weight:800;margin:14px 0 5px}.login input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px}.primary,.secondary,.danger{border-radius:9px;padding:10px 15px;font-weight:800;border:0}.primary{background:linear-gradient(90deg,#08458d,#0b66be);color:white}.secondary{background:white;border:1px solid #89a7c9;color:var(--navy)}.danger{background:#fff;border:1px solid #f3b6b1;color:#b42318}.full{width:100%;margin-top:16px}.login-msg{min-height:18px;color:var(--red);font-size:11px;margin-top:8px}
+.app{min-height:100vh;display:grid;grid-template-columns:230px 1fr}.sidebar{height:100vh;position:sticky;top:0;background:linear-gradient(180deg,#00204b,#063a76);color:white;padding:16px 12px;display:flex;flex-direction:column}.brand{display:flex;gap:10px;align-items:center;padding:0 7px 14px}.brand-title{font-weight:900;font-size:16px;line-height:1.15}.tag{display:inline-block;margin-top:5px;font-size:9px;border:1px solid #ffd43b;color:#ffd43b;padding:3px 6px;border-radius:999px;font-weight:800}.side-note{font-size:10.5px;line-height:1.55;background:rgba(255,255,255,.08);border-radius:12px;padding:11px;margin-bottom:12px}.side-note b{display:block;font-size:12px;margin-bottom:3px}.nav{display:flex;flex-direction:column;gap:4px}.nav button{border:0;background:transparent;color:#fff;text-align:left;padding:12px;border-radius:8px;font-weight:700}.nav button.active{background:rgba(255,255,255,.16)}.side-bottom{margin-top:auto;font-size:10px;line-height:1.5;opacity:.82;padding:10px}
+.main{min-width:0}.topbar{height:58px;position:sticky;top:0;z-index:30;background:linear-gradient(90deg,#001b3e,#06356e);color:#fff;display:flex;align-items:center;gap:10px;padding:0 18px}.top-title{font-weight:850}.top-meta{font-size:10px;opacity:.8}.grow{flex:1}.top-btn{border:1px solid rgba(255,255,255,.28);background:transparent;color:white;border-radius:8px;padding:8px 12px;font-weight:700}
+.content{padding:20px 24px 34px}.hero{background:linear-gradient(100deg,#063a76,#0b64b5);color:white;border-radius:15px;padding:18px 20px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}.hero h1{font-size:24px;margin:0 0 5px}.hero p{font-size:11.5px;line-height:1.55;margin:0;opacity:.9}.hero .hero-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;opacity:.8}.hero .hero-right{margin-left:auto;min-width:200px;text-align:right}.hero .hero-right b{font-size:17px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}.ctrl{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 10px}.ctrl label{font-size:10px;color:var(--muted);font-weight:800}.ctrl select{border:0;background:transparent;outline:0;font-weight:750;color:var(--ink)}.toolbar .grow{flex:1}
+.page{display:none}.page.active{display:block}.grid6{display:grid;grid-template-columns:repeat(6,minmax(145px,1fr));gap:10px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(15,36,71,.025)}.metric{padding:14px;position:relative;overflow:hidden}.metric:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#2c7ed4}.metric .label{font-size:10.5px;font-weight:850;color:#27466b}.metric .value{font-size:25px;font-weight:900;margin:9px 0 3px}.metric .foot{font-size:9.8px;color:var(--muted);line-height:1.4}.metric.good:before{background:var(--green)}.metric.warn:before{background:var(--amber)}.metric.bad:before{background:var(--red)}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px}.section{padding:14px}.section-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:850;margin-bottom:10px}.section-title .right{margin-left:auto}.muted{color:var(--muted)}.small{font-size:10.5px}.hint{background:#f7fbff;border:1px solid #cfe2f6;border-radius:9px;padding:10px 12px;font-size:10.8px;line-height:1.5;color:#365777}.warning{background:#fff7e8;border-color:#f2d091;color:#7b5a12}
+.tablewrap{overflow:auto}.tbl{border-collapse:collapse;width:100%;font-size:11px;white-space:nowrap}.tbl th{background:#f4f7fb;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:10px;color:#42536a}.tbl td{padding:9px 10px;border-bottom:1px solid #edf1f5;vertical-align:top}.tbl tr.total{background:#eef5ff;font-weight:850}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:9.5px;font-weight:800}.p-green{background:#e8f7ef;color:#067647}.p-amber{background:#fff3df;color:#a85c00}.p-red{background:#fdecec;color:#c62920}.p-blue{background:#eaf3ff;color:#175cd3}.p-gray{background:#eef1f4;color:#586779}
+.barlist{display:flex;flex-direction:column;gap:9px}.barrow{display:grid;grid-template-columns:120px 1fr 70px;gap:8px;align-items:center;font-size:10.5px}.bartrack{height:10px;background:#edf2f7;border-radius:99px;overflow:hidden}.barfill{height:100%;background:linear-gradient(90deg,#1675d1,#55a4ec);border-radius:99px}.barfill.red{background:linear-gradient(90deg,#d92d20,#f36a5d)}.barfill.amber{background:linear-gradient(90deg,#dc8b12,#f6b84b)}
+.tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font-weight:750;color:#52647a}.tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filters{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:8px;margin-bottom:10px}.filters input,.filters select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px;background:white}.empty{padding:28px;text-align:center;color:var(--muted);font-size:11px}
+.statusline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sapgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.sapmetric{padding:13px}.sapmetric b{display:block;font-size:18px;margin-top:6px}.uploadbox{margin-top:12px;border:1px dashed #8fb1d6;background:#fbfdff;border-radius:12px;padding:16px;text-align:center}.uploadbox input{display:none}.uploadbox label{display:inline-block}.history{margin-top:12px}
+.overlay{position:fixed;inset:0;background:rgba(0,20,50,.62);z-index:120;display:none;align-items:center;justify-content:center;padding:18px}.overlay.show{display:flex}.modal{width:min(920px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:var(--shadow)}.modal-head{position:sticky;top:0;z-index:2;background:linear-gradient(90deg,#002760,#001b42);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}.modal-head h2{font-size:16px;margin:0}.modal-head .grow{flex:1}.close{border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:7px;padding:7px 10px}.modal-body{padding:16px}.modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:8px;justify-content:flex-end}.detailgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field{border:1px solid var(--line);border-radius:9px;padding:9px}.field label{display:block;font-size:9.5px;font-weight:850;color:#53647a;margin-bottom:4px}.photos{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.photos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.formgrid input,.formgrid select,.formgrid textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px}.span2{grid-column:span 2}
+.mobilebar{display:none}
+@media(max-width:1180px){.grid6{grid-template-columns:repeat(3,1fr)}.two{grid-template-columns:1fr}.sapgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.app{display:block}.sidebar{display:none}.topbar{height:68px;padding-top:env(safe-area-inset-top)}.topbar .top-btn{display:none}.content{padding:14px 12px 88px}.hero{padding:15px;display:block}.hero h1{font-size:21px}.hero .hero-right{text-align:left;margin:12px 0 0}.toolbar .grow{display:none}.toolbar .primary,.toolbar .secondary{flex:1}.ctrl{flex:1}.grid6{grid-template-columns:1fr 1fr}.metric .value{font-size:22px}.filters{grid-template-columns:1fr 1fr}.mobilebar{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;bottom:0;left:0;right:0;z-index:50;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}.mobilebar button{border:0;background:#fff;padding:10px 2px;color:#52647a;font-size:9px;font-weight:700}.mobilebar button.active{background:var(--navy);color:#fff}.mobilebar b{display:block;font-size:18px;margin-bottom:2px}.detailgrid,.formgrid{grid-template-columns:1fr}.span2{grid-column:auto}.photos{grid-template-columns:repeat(2,1fr)}.overlay{padding:0;align-items:stretch}.modal{border-radius:0;max-height:100vh}.modal-head{padding-top:calc(14px + env(safe-area-inset-top))}}
+@media(max-width:430px){.grid6{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.sapgrid{grid-template-columns:1fr}.barrow{grid-template-columns:90px 1fr 60px}}
+</style>
 </head>
 <body>
 <div class="login" id="login">
   <div class="login-box">
-    <div class="login-brand"><div id="loginLogo"></div><div><h2>SLS Breakage Monitoring</h2><div class="smallnote">Aplikasi operasional · database Claw yang sama</div></div></div>
-    <label style="font-size:11px;font-weight:800">User ID</label>
-    <input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="User ID (contoh: wms.jkt.spv)" />
-    <label style="font-size:11px;font-weight:800;display:block;margin-top:4px">Password</label>
-    <input id="pw" type="password" autocomplete="current-password" placeholder="Password" />
-    <div class="smallnote" style="margin:-2px 0 8px">Gunakan User ID sesuai credential resmi (contoh Supervisor Jakarta: wms.jkt.spv), bukan email.</div>
-    <button class="primary" id="loginBtn">Masuk</button>
-    <div class="login-msg" id="loginMsg"></div>
-    <div class="smallnote" style="margin-top:12px">Login mengikuti akun SLS existing. Scope RDC dan hak akses divalidasi backend.</div>
+    <div class="brandrow"><div id="loginLogo"></div><div><h1>SLS Breakage Monitoring</h1><div class="sub">Rekap breakage · monitoring insiden · rekonsiliasi SAP</div></div></div>
+    <label>User ID</label><input id="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Contoh: wms.jkt.spv">
+    <label>Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Password">
+    <button class="primary full" id="loginBtn">Masuk</button>
+    <div id="loginMsg" class="login-msg"></div>
+    <div class="sub">Hak akses dan cakupan RDC mengikuti akun SLS yang terdaftar.</div>
   </div>
 </div>
-<div class="app" id="app" style="display:none">
+
+<div id="app" class="app" style="display:none">
   <aside class="sidebar">
-    <div class="brand"><div id="sideLogo"></div><div><div class="brand-title">SLS BREAKAGE<br>MONITORING</div><span class="tag">APLIKASI OPERASIONAL</span></div></div>
-    <div class="oper-note"><b>ⓘ Aplikasi Operasional</b>Monitoring, rekap, analisa & tindak lanjut dilakukan di sini.<br><br>Input incident dilakukan melalui web SLS Breakage Input. Control Tower hanya menampilkan hasil utama / data besar.</div>
-    <div class="nav" id="nav">
-      <button class="active" data-page="overview">⌂ Overview</button>
-      <button data-page="rekap">▥ Rekap & Trend</button>
-      <button data-page="incident">⚠ Incident</button>
-      <button data-page="reconcile">▤ SAP Movement & Reconciliation</button>
-      <button data-page="target" id="navTarget">◎ Target KPI</button>
+    <div class="brand"><div id="sideLogo"></div><div><div class="brand-title">SLS BREAKAGE<br>MONITORING</div><span class="tag">REKAP & KONTROL</span></div></div>
+    <div class="side-note"><b>Fokus aplikasi</b>Melihat hasil breakage, rekap per RDC, detail insiden, dan rekonsiliasi SAP. Input dilakukan melalui Breakage Input.</div>
+    <div class="nav">
+      <button class="active" data-page="ringkasan">⌂ Ringkasan</button>
+      <button data-page="rekap">▥ Rekap Breakage</button>
+      <button data-page="insiden">⚠ Insiden</button>
+      <button data-page="sap">▤ Rekonsiliasi SAP</button>
     </div>
-    <div class="side-bottom"><b>Breakage Control</b><br>Daily Incident + SAP D+1 → Provisional KPI → Month-End Reconciliation → Final KPI</div>
+    <div class="side-bottom">Alur kontrol: Input Admin RDC → Review SPV → Monitoring → Rekonsiliasi SAP → Final.</div>
   </aside>
+
   <main class="main">
-    <header class="topbar"><div class="who" id="who">—</div><button class="topbtn" id="ctBtn">▥ Control Tower</button><button class="topbtn" id="logoutBtn">⇥ Keluar</button></header>
+    <header class="topbar">
+      <div><div class="top-title">Breakage Monitoring</div><div id="who" class="top-meta">—</div></div><div class="grow"></div>
+      <button class="top-btn" id="controlTowerBtn">Control Tower</button><button class="top-btn" id="logoutBtn">Keluar</button>
+    </header>
     <div class="content">
-      <div class="head"><h1 id="pageTitle">Monitoring Breakage Nasional</h1><div class="head-sub"><span>↔ Data incident berasal dari SLS Breakage Input — diverifikasi & diinput SPV RDC.</span><span>▣ Target KPI dapat diatur & direvisi oleh Master.</span><span>ⓘ Dashboard hanya menampilkan hasil utama / data besar.</span></div></div>
-      <div class="toolbar">
-        <div class="ctrl">▣ <label>Periode</label><select id="period"></select></div>
-        <div class="seg" id="gran"><button data-g="daily">Harian</button><button data-g="weekly">Mingguan</button><button class="active" data-g="monthly">Bulanan</button></div>
-        <div class="ctrl" id="scopeCtrl"><label>Scope</label><select id="scope"><option value="ALL">Nasional</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
-        <div class="ctrl hidden" id="windowCtrl"><label>Target Window</label><select id="windowSel"></select></div>
-        <span class="spacer"></span>
-        <button class="primary" id="inputBtn">↗ Buka Breakage Input</button>
-        <button class="secondary" id="sapMoveBtn">⇪ Upload SAP D+1</button>
-        <button class="secondary desktop-target" id="targetBtn">⚙ Setting Target KPI</button>
+      <div class="hero">
+        <div><div class="hero-kicker">Quality Control · SLS</div><h1>Kontrol Breakage untuk Operasi yang Lebih Baik</h1><p>Fokus pada hasil: berapa breakage terjadi, di RDC mana, jenis apa, penyebab apa, dan status tindak lanjutnya.</p></div>
+        <div class="hero-right"><div class="small" style="opacity:.8">Periode aktif</div><b id="heroPeriod">—</b><div id="heroStatus" class="small" style="margin-top:5px">—</div></div>
       </div>
 
-      <section class="page active" id="page-overview">
-        <div class="grid-kpi" id="kpis"></div>
-        <div class="card section" id="targetWindow"></div>
-        <div class="card section" id="baselinePanel"></div>
-        <div class="dashboard-body">
-          <div>
-            <div class="card table-card" id="scorecard"></div>
-            <div class="chart-grid"><div class="card chart" id="trendChart"></div><div class="card chart" id="scoreChart"></div></div>
-          </div>
-          <div class="rightcol"><div class="card action-card" id="actions"></div></div>
+      <div class="toolbar">
+        <div class="ctrl"><label>Periode</label><select id="period"></select></div>
+        <div class="ctrl" id="scopeCtrl"><label>RDC</label><select id="scope"><option value="ALL">Nasional</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
+        <div class="grow"></div>
+        <button class="secondary" id="refreshBtn">↻ Perbarui</button><button class="primary" id="inputBtn">＋ Buka Breakage Input</button>
+      </div>
+
+      <section id="page-ringkasan" class="page active">
+        <div id="summaryCards" class="grid6"></div>
+        <div class="two">
+          <div class="card section"><div class="section-title">Rekap Breakage per RDC <span class="right"><button class="secondary" onclick="showPage('rekap')">Lihat Rekap</button></span></div><div id="rdcQuick"></div></div>
+          <div class="card section"><div class="section-title">Penyebab Terbanyak</div><div id="causeQuick"></div></div>
+        </div>
+        <div class="card section" style="margin-top:12px"><div class="section-title">Insiden Terbaru <span class="right"><button class="secondary" onclick="showPage('insiden')">Lihat Semua</button></span></div><div id="latestIncidents"></div></div>
+      </section>
+
+      <section id="page-rekap" class="page">
+        <div class="card section">
+          <div class="section-title">Rekap Breakage <span class="right"><button class="secondary" id="exportBtn">↓ Excel</button></span></div>
+          <div class="tabs" id="rekapTabs"><button data-mode="daily">Harian</button><button data-mode="weekly">Mingguan</button><button class="active" data-mode="monthly">Bulanan</button></div>
+          <div id="rekapSummary"></div>
+          <div id="rekapTrend" style="margin-top:14px"></div>
         </div>
       </section>
-      <section class="page" id="page-rekap"><div class="card section" id="rekapBody"></div></section>
-      <section class="page" id="page-incident"><div class="card section" id="incidentBody"></div></section>
-      <section class="page" id="page-reconcile"><div class="card section" id="reconBody"></div></section>
-      <section class="page" id="page-target"><div class="card section" id="targetBody"></div></section>
+
+      <section id="page-insiden" class="page">
+        <div class="card section">
+          <div class="section-title">Daftar Insiden <span class="right"><button class="primary" onclick="openInputApp()">＋ Input Baru</button></span></div>
+          <div class="filters"><select id="filterType"><option value="ALL">Semua Jenis</option><option value="warehouse">Gudang</option><option value="delivery">Pengiriman</option><option value="receiving">Penerimaan</option></select><select id="filterStatus"><option value="ALL">Semua Status</option></select><input id="filterSearch" placeholder="Cari item / No BA / pelapor"><button class="secondary" id="clearFilter">Hapus Filter</button></div>
+          <div id="incidentTable"></div>
+        </div>
+      </section>
+
+      <section id="page-sap" class="page">
+        <div class="card section">
+          <div class="section-title">Rekonsiliasi SAP & Eksposur Gudang</div>
+          <div id="sapStatus" class="sapgrid"></div>
+          <div id="cutoffBlock" style="margin-top:12px"></div>
+          <div class="uploadbox"><b>Upload SAP MB51 D+1 / MTD</b><div class="sub" style="margin:6px 0 12px">Tarik data tanggal 1 bulan berjalan sampai kemarin untuk pembaruan exposure sementara.</div><label class="primary" for="sapFile">Pilih File MB51</label><input id="sapFile" type="file" accept=".xlsx,.xls"><select id="sapMode" style="margin-left:8px;padding:9px;border:1px solid var(--line);border-radius:8px"><option value="MTD">MTD</option><option value="D1">D-1</option></select><div id="sapMsg" class="small" style="margin-top:10px"></div></div>
+          <div class="history"><div class="section-title">Riwayat Upload SAP</div><div id="sapHistory"></div></div>
+          <div class="history"><div class="section-title">Rekonsiliasi Final Akhir Bulan <span class="right"><button class="secondary" id="monthEndBtn">Mulai Rekonsiliasi Final</button></span></div><div class="hint">Akhir bulan: gunakan full MB51, review selisih, lalu publish. KPI final hanya setelah rekonsiliasi selesai.</div><div id="reconHistory" style="margin-top:10px"></div></div>
+        </div>
+      </section>
     </div>
   </main>
 </div>
-<div class="mobilebar" id="mobilebar">
-  <button class="active" data-page="overview"><span>⌂</span>Overview</button><button data-page="rekap"><span>▥</span>Rekap</button><button data-page="incident"><span>⚠</span>Incident</button><button data-page="target"><span>◎</span>Target</button><button data-page="reconcile"><span>•••</span>Menu</button>
-</div>
 
-<!-- incident modal -->
-<div class="overlay" id="incidentModal"><div class="modal">
-  <div class="modal-head"><div style="display:flex;gap:10px;align-items:center"><div id="modalLogo"></div><div><h2>Input Breakage</h2><div id="inputIdentity" style="font-size:11px;opacity:.85"></div></div></div><button class="close" data-close="incidentModal">✕</button></div>
-  <div class="modal-body">
-    <div class="smallnote input-note"><span>Input berdasarkan laporan team lapangan</span><span style="color:#079455;font-weight:800" id="draftStatus">☁ Draft otomatis tersimpan</span></div>
-    <div class="form-grid" style="margin-top:12px"><div class="field readonly"><label>RDC (otomatis)</label><input id="fRdc" disabled></div><div class="field readonly"><label>Input By (otomatis)</label><input id="fInputBy" disabled></div></div>
-    <div class="steps"><div class="step active"><i>1</i>Kejadian</div><div class="step"><i>2</i>Detail</div><div class="step"><i>3</i>Evidence</div></div>
-    <div class="field span2"><label>Jenis Kejadian *</label><div class="type-tabs" id="typeTabs"><button data-type="receiving">▧ Penerimaan</button><button data-type="delivery" class="active">▣ Pengiriman</button><button data-type="warehouse">⌂ Gudang</button></div><div class="hint" style="margin-top:10px">Receiving dicatat sebagai qty/control volume; tidak otomatis masuk Delivery/Warehouse Rate.</div></div>
-    <div class="form-grid" style="margin-top:10px">
-      <div class="field"><label>Tanggal Kejadian *</label><input type="date" id="fDate"></div><div class="field"><label>No BA *</label><input id="fBa" placeholder="Contoh: BA/JK/0926/001"></div>
-      <div class="field"><label>Kode Item *</label><input id="fItem" placeholder="Cari kode atau nama item"></div><div class="field"><label>Qty *</label><div style="display:flex"><input type="number" min="0.01" step="0.01" id="fQty" placeholder="Masukkan jumlah"><b style="font-size:11px;padding:4px">BOX</b></div></div>
-      <div class="field span2"><label>Reported By (Nama Team Lapangan) *</label><input id="fReported" placeholder="Masukkan nama pelapor"></div>
-    </div>
-    <div id="conditional" style="margin-top:10px"></div>
-    <div class="field" style="margin-top:10px"><label>Penyebab *</label><div class="cause-tabs" id="causeTabs"><button data-cause="Perjalanan" class="active">Perjalanan</button><button data-cause="Susunan">Susunan</button><button data-cause="Packaging / Pallet">Packaging / Pallet</button><button data-cause="Lainnya">Lainnya</button></div><textarea id="fCauseDetail" placeholder="Keterangan penyebab / kejadian secara singkat" maxlength="300" style="margin-top:8px"></textarea></div>
-    <div class="photo-area" style="margin-top:10px"><b style="font-size:12px">Evidence (Foto 1–5 wajib)</b><div class="smallnote">Foto disimpan sebagai evidence incident.</div><div class="photo-actions"><label for="fPhotos">▣ Ambil Foto / Pilih dari Galeri</label><input type="file" id="fPhotos" accept="image/jpeg,image/png" multiple capture="environment" hidden></div><div class="photo-preview" id="photoPreview"></div></div>
-    <div class="errorbox hidden" id="inputMsg"></div>
-  </div>
-  <div class="modal-foot"><button class="secondary" id="saveDraft">▣ Simpan Draft</button><button class="primary" id="submitIncident">→ Review & Submit</button></div>
-</div></div>
+<nav class="mobilebar" id="mobilebar"><button class="active" data-page="ringkasan"><b>⌂</b>Ringkasan</button><button data-page="rekap"><b>▥</b>Rekap</button><button data-page="insiden"><b>⚠</b>Insiden</button><button data-page="sap"><b>▤</b>SAP</button></nav>
 
-<!-- target modal -->
-<div class="overlay" id="targetModal"><div class="modal" style="max-width:760px"><div class="modal-head"><h2>Input / Revisi Target KPI</h2><button class="close" data-close="targetModal">✕</button></div><div class="modal-body target-form">
-  <div class="hint">Hanya Master dapat mengubah target. Revisi tidak menghapus target lama; sistem menyimpan version, waktu, user, alasan, dan target yang digantikan.</div>
-  <div class="form-grid" style="margin-top:12px">
-    <div class="field"><label>KPI</label><select id="tKpi"><option value="delivery">Delivery Breakage Rate</option><option value="warehouse">Warehouse Breakage Rate</option></select></div>
-    <div class="field"><label>Scope</label><select id="tScope"><option value="ALL">Nasional / All RDC</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
-    <div class="field"><label>Periode</label><select id="tPeriod"><option value="2026-09">September 2026</option><option value="2026-10">Oktober 2026</option></select></div>
-    <div class="field"><label>Window</label><select id="tWindow"></select></div>
-    <div class="field"><label>Target Rate / 10.000</label><input type="number" step="0.01" id="tValue"></div>
-    <div class="field"><label>Objective</label><input id="tObjective" placeholder="Contoh: 25% recovery of gap"></div>
-    <div class="field span2"><label>Alasan Revisi *</label><textarea id="tReason" placeholder="Alasan perubahan target wajib diisi"></textarea></div>
-  </div>
-  <div id="targetMsg" class="errorbox hidden"></div>
-  <div class="history"><div class="section-title">Riwayat Revisi</div><div id="targetHistory"></div></div>
-</div><div class="modal-foot"><button class="secondary" data-close="targetModal">Batal</button><button class="primary" id="saveTarget">Simpan Recovery Target / Revisi</button></div></div></div>
+<div id="detailModal" class="overlay"><div class="modal"><div class="modal-head"><h2 id="detailTitle">Detail Insiden</h2><div class="grow"></div><button class="close" data-close="detailModal">✕</button></div><div class="modal-body"><div id="detailFields" class="detailgrid"></div><div class="section-title" style="margin-top:14px">Foto Evidence</div><div id="detailPhotos" class="photos"></div><div id="detailMsg" class="small muted" style="margin-top:8px"></div></div></div></div>
 
-<!-- KPI management setting modal -->
-<div class="overlay" id="kpiSettingModal"><div class="modal" style="max-width:780px"><div class="modal-head"><h2>Setting Target Utama KPI</h2><button class="close" data-close="kpiSettingModal">✕</button></div><div class="modal-body">
-  <div class="hint"><b>Target Utama Management</b> adalah target resmi yang menjadi acuan pencapaian KPI. Recovery Target Sep–Okt tetap dikelola terpisah sebagai milestone perbaikan. Setiap revisi disimpan sebagai history dan tidak menghapus target lama.</div>
-  <div class="form-grid" style="margin-top:12px">
-    <div class="field"><label>KPI</label><select id="mKpi"><option value="delivery">Delivery Breakage Rate</option><option value="warehouse">Warehouse Breakage Rate</option><option value="receiving">Receiving Breakage</option></select></div>
-    <div class="field"><label>Scope</label><select id="mScope"><option value="ALL">Nasional / All RDC</option><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
-    <div class="field"><label>Target (%)</label><input type="number" min="0" step="0.0001" id="mPct" placeholder="Contoh 0.0200"></div>
-    <div class="field"><label>Target / 10.000</label><input type="number" min="0" step="0.01" id="mRate" placeholder="Contoh 2.00"></div>
-    <div class="field span2"><label>Denominator KPI</label><select id="mDenom"></select></div>
-    <div class="field span2"><label>Alasan Revisi *</label><textarea id="mReason" placeholder="Contoh: Penetapan target management 0,02% dan perubahan denominator menjadi Stock Awal + Stock In + Stock Out"></textarea></div>
-  </div>
-  <div class="hint" id="mFormulaNote" style="margin-top:10px"></div>
-  <div id="mSettingMsg" class="errorbox hidden"></div>
-  <div class="history"><div class="section-title">Riwayat Setting Target Utama</div><div id="mSettingHistory"></div></div>
-</div><div class="modal-foot"><button class="secondary" data-close="kpiSettingModal">Batal</button><button class="primary" id="saveKpiSetting">Simpan Setting / Revisi</button></div></div></div>
+<div id="cutoffModal" class="overlay"><div class="modal" style="max-width:650px"><div class="modal-head"><h2>Tetapkan Stock Awal</h2><div class="grow"></div><button class="close" data-close="cutoffModal">✕</button></div><div class="modal-body"><div class="hint">Digunakan sebagai saldo awal resmi sebelum go-live.</div><div class="formgrid" style="margin-top:10px"><div><label class="small">RDC</label><select id="cRdc"><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div><div><label class="small">Tanggal Cut-off</label><input id="cDate" type="date"></div><div><label class="small">Stock Awal (Box)</label><input id="cStock" type="number" min="0"></div><div><label class="small">Sumber</label><select id="cSource"><option value="SAP_CUTOFF">SAP Cut-off</option><option value="STOCK_OPNAME">Stock Opname</option><option value="WMS_SNAPSHOT">WMS Snapshot</option><option value="MANUAL_APPROVED">Manual Approved</option></select></div><div class="span2"><label class="small">Referensi</label><input id="cRef"></div><div class="span2"><label class="small">Catatan / Alasan</label><textarea id="cReason" rows="3"></textarea></div></div><div id="cMsg" class="small" style="margin-top:8px"></div></div><div class="modal-foot"><button class="secondary" data-close="cutoffModal">Batal</button><button class="primary" id="saveCutoff">Simpan</button></div></div></div>
 
-<!-- Go-Live Cut-off Stock modal -->
-<div class="overlay" id="cutoffModal"><div class="modal" style="max-width:780px"><div class="modal-head"><h2>Go-Live Cut-off Stock</h2><button class="close" data-close="cutoffModal">✕</button></div><div class="modal-body">
-  <div class="hint"><b>Cut-off Stock adalah opening balance resmi sebelum go-live.</b> Warehouse Handling Exposure dihitung dari <b>Stock Awal + Stock In + Stock Out</b>. Gunakan angka hasil cut-off SAP/stock opname yang disepakati; jangan memakai stock current yang berubah-ubah.</div>
-  <div class="form-grid" style="margin-top:12px">
-    <div class="field"><label>RDC *</label><select id="cRdc"><option>Jakarta</option><option>Semarang</option><option>Surabaya</option><option>Denpasar</option><option>Palembang</option></select></div>
-    <div class="field"><label>Tanggal Cut-off *</label><input type="date" id="cDate"></div>
-    <div class="field"><label>Stock Awal / Opening Stock (Box) *</label><input type="number" min="0" step="1" id="cStock" placeholder="Hasil cut-off stock"></div>
-    <div class="field"><label>Sumber *</label><select id="cSource"><option value="SAP_CUTOFF">SAP Cut-off</option><option value="STOCK_OPNAME">Stock Opname</option><option value="WMS_SNAPSHOT">WMS Snapshot (setelah reconcile SAP)</option><option value="MANUAL_APPROVED">Manual Approved</option></select></div>
-    <div class="field span2"><label>Reference / Nama File</label><input id="cRef" placeholder="Contoh: SAP Stock Snapshot 03-Sep-2026"></div>
-    <div class="field span2"><label>Alasan / Catatan *</label><textarea id="cReason" placeholder="Contoh: Initial go-live cut-off Breakage Monitoring setelah stock opname dan reconcile SAP"></textarea></div>
-  </div>
-  <div id="cMsg" class="errorbox hidden"></div>
-  <div class="history"><div class="section-title">Riwayat Cut-off / Revisi</div><div id="cHistory"></div></div>
-</div><div class="modal-foot"><button class="secondary" data-close="cutoffModal">Batal</button><button class="primary" id="saveCutoff">Simpan Cut-off / Revisi</button></div></div></div>
+<div id="reconModal" class="overlay"><div class="modal"><div class="modal-head"><h2>Rekonsiliasi Final SAP MB51</h2><div class="grow"></div><button class="close" data-close="reconModal">✕</button></div><div class="modal-body" id="reconWizard"></div></div></div>
 
-<!-- SAP movement D+1 / MTD modal -->
-<div class="overlay" id="sapMoveModal"><div class="modal" style="max-width:920px">
-  <div class="modal-head"><h2>Upload SAP MB51 — Movement D+1 / MTD</h2><button class="close" data-close="sapMoveModal">✕</button></div>
-  <div class="modal-body">
-    <div class="hint"><b>Recommended: tarik MB51 Month-to-Date setiap pagi (tanggal 1 bulan berjalan s.d. kemarin).</b> Sistem melakukan dedupe antar upload. Hanya movement yang sudah dimapping sebagai <b>IN</b> atau <b>OUT</b> yang masuk Warehouse Handling Exposure. Unknown movement type akan menjadi <b>REVIEW REQUIRED</b>.</div>
-    <div class="form-grid" style="margin-top:12px">
-      <div class="field"><label>Mode Upload</label><select id="smMode"><option value="MTD">MTD — tanggal 1 s.d. kemarin (recommended)</option><option value="D1">D-1 — transaksi kemarin saja</option></select></div>
-      <div class="field"><label>File SAP MB51</label><label for="smFile" class="secondary" style="display:inline-block">Pilih .xlsx / .xls</label><input type="file" id="smFile" accept=".xlsx,.xls" hidden></div>
-    </div>
-    <div class="smallnote" style="margin-top:8px">Kolom minimum: Posting Date, Movement Type, Quantity, Storage Location, Name 1/RDC. Untuk dedupe paling kuat, sertakan Material Document + Material Doc.Item.</div>
-    <div id="smMsg" class="errorbox hidden"></div>
-    <div id="smPreview" style="margin-top:12px"></div>
-    <div class="history"><div class="section-title">Movement Mapping SAP</div><div id="smMapping"></div></div>
-  </div>
-  <div class="modal-foot"><button class="secondary" data-close="sapMoveModal">Tutup</button></div>
-</div></div>
-
-<div class="overlay" id="movementMapModal"><div class="modal" style="max-width:650px">
-  <div class="modal-head"><h2>Mapping Movement Type SAP</h2><button class="close" data-close="movementMapModal">✕</button></div>
-  <div class="modal-body">
-    <div class="hint">Hanya Master. Mapping menentukan movement masuk <b>Stock In</b>, <b>Stock Out</b>, internal transfer, breakage, atau dikeluarkan dari denominator.</div>
-    <div class="form-grid" style="margin-top:12px">
-      <div class="field"><label>Movement Type</label><input id="mmType" readonly></div>
-      <div class="field"><label>Klasifikasi</label><select id="mmBucket"><option value="IN">Stock In</option><option value="OUT">Stock Out</option><option value="INTERNAL">Internal Transfer</option><option value="BREAKAGE">Breakage</option><option value="EXCLUDE">Exclude</option><option value="REVIEW">Review</option></select></div>
-      <div class="field"><label>Factor</label><select id="mmFactor"><option value="1">+1 Normal</option><option value="-1">-1 Reversal</option><option value="0">0 Tidak masuk exposure</option></select></div>
-      <div class="field span2"><label>Catatan</label><textarea id="mmNotes" placeholder="Contoh: reversal 601 / goods issue customer"></textarea></div>
-    </div>
-    <div id="mmMsg" class="errorbox hidden"></div>
-  </div>
-  <div class="modal-foot"><button class="secondary" data-close="movementMapModal">Batal</button><button class="primary" id="saveMoveMap">Simpan Mapping</button></div>
-</div></div>
-
-<!-- reconciliation modal -->
-<div class="overlay" id="reconModal"><div class="modal"><div class="modal-head"><h2>Final Month-End Reconciliation — SAP MB51</h2><button class="close" data-close="reconModal">✕</button></div><div class="modal-body" id="reconWizard"></div></div></div>
-<script src="app.js"></script>
+<script>
+const BREAKAGE_INPUT_URL='https://sls-breakage-input.vercel.app/';
+const CONTROL_TOWER_URL='https://sls-supply-chain-control-tower.vercel.app/';
+const SUPABASE_URL='https://mfdckngkvjnemwgmkiiv.supabase.co';
+const PUBLIC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZGNrbmdrdmpuZW13Z21raWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwMDcxMjUsImV4cCI6MjEwMTU4MzEyNX0.mFhv9hgQvjzg6AYfmEI2GiJ71I2xSkOozC43mwFcogU';
+const RDC_LIST=['Jakarta','Semarang','Surabaya','Denpasar','Palembang'];
+let SESSION=null,ACCESS=null,PERIOD='',SCOPE='ALL',OVERVIEW=null,INCIDENTS=[],RDCROWS=[],TREND=[],EXPOSURE=null,MOVEH=[],RECONH=[],CUTOFFS=[],REKAP_MODE='monthly',UPLOAD=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt=v=>v==null||v===''?'—':Number(v).toLocaleString('id-ID',{maximumFractionDigits:2});
+const rate=v=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+function logoSvg(size=58){return `<svg width="${size}" viewBox="0 0 100 80" aria-label="ROMAN"><path d="M12 47A38 38 0 0 1 88 47" fill="none" stroke="#ef1b2d" stroke-width="12"/><path d="M23 47A27 27 0 0 1 77 47" fill="none" stroke="#ffd21d" stroke-width="8"/><path d="M17 49h66l-8 10H25z" fill="#061b3c"/><circle cx="50" cy="48" r="8" fill="#ffd21d" stroke="#061b3c" stroke-width="4"/><text x="50" y="75" text-anchor="middle" font-size="18" font-weight="900" font-style="italic" fill="#ef1b2d">ROMAN</text></svg>`}
+$('loginLogo').innerHTML=logoSvg(64);$('sideLogo').innerHTML=logoSvg(54);
+function cleanErr(s){try{const j=JSON.parse(s);return j.message||j.error||s}catch{return String(s||'Gagal')}}
+function auth(){return SESSION?.access_token||PUBLIC_ANON}
+function currentPeriod(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function monthName(p){const [y,m]=p.split('-').map(Number);return new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(y,m-1,1))}
+function monthOffset(p,n){let[y,m]=p.split('-').map(Number);let d=new Date(y,m-1+n,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function typeLabel(t){return ({warehouse:'Gudang',delivery:'Pengiriman',receiving:'Penerimaan'})[t]||t||'—'}
+function statusLabel(s){const x=String(s||'').toUpperCase();return ({DRAFT:'Draft',WAITING_SPV:'Menunggu SPV',RETURNED_ADMIN:'Dikembalikan ke Admin',APPROVED_SPV:'Disetujui SPV',MASTER_REVIEW:'Review Master',FINAL:'Final',CLOSED:'Final'})[x]||s||'—'}
+function statusPill(s){const x=String(s||'').toUpperCase(),cls=['FINAL','CLOSED','APPROVED_SPV'].includes(x)?'p-green':x==='RETURNED_ADMIN'?'p-red':x==='MASTER_REVIEW'?'p-blue':'p-amber';return `<span class="pill ${cls}">${esc(statusLabel(s))}</span>`}
+function dataPill(s){const x=String(s||'').toUpperCase();if(x==='FINAL')return '<span class="pill p-green">Final</span>';if(x==='PROVISIONAL')return '<span class="pill p-blue">Sementara</span>';if(x==='REVIEW_REQUIRED')return '<span class="pill p-red">Perlu Review</span>';if(x==='CUT_OFF_REQUIRED')return '<span class="pill p-amber">Perlu Stock Awal</span>';return '<span class="pill p-gray">Data Belum Lengkap</span>'}
+async function refreshSession(){if(!SESSION?.refresh_token)return false;const exp=Number(SESSION.expires_at||0);if(exp&&exp-Math.floor(Date.now()/1000)>120)return true;const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,{method:'POST',headers:{apikey:PUBLIC_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SESSION.refresh_token})});if(!r.ok)return false;const n=await r.json();SESSION={...SESSION,...n};sessionStorage.setItem('sls_breakage_session',JSON.stringify(SESSION));return true}
+async function rpc(fn,params={}){await refreshSession().catch(()=>false);let last;for(let i=0;i<3;i++){try{const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{method:'POST',cache:'no-store',signal:AbortSignal.timeout(25000),headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${auth()}`,'Content-Type':'application/json'},body:JSON.stringify(params)});if(!r.ok)throw new Error(await r.text());return await r.json()}catch(e){last=e;if(i<2)await new Promise(r=>setTimeout(r,400*(i+1)))}}throw last}
+async function safeRpc(fn,p,fb){try{return await rpc(fn,p)}catch(e){console.warn(fn,cleanErr(e.message));return fb}}
+async function signIn(username,pw){username=String(username||'').trim().toLowerCase();if(!username||!pw)throw new Error('User ID dan password wajib.');const email=await rpc('get_login_email',{input_username:username,input_password:pw});if(!email)throw new Error('User ID atau password salah.');const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{apikey:PUBLIC_ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});if(!r.ok)throw new Error('Login gagal. Periksa User ID dan password.');SESSION=await r.json();ACCESS=await rpc('breakage_my_access_v44',{});sessionStorage.setItem('sls_breakage_session',JSON.stringify(SESSION));sessionStorage.setItem('sls_breakage_username',username)}
+function initPeriods(){PERIOD=PERIOD||currentPeriod();let a=[];const d=new Date();for(let i=-12;i<=1;i++){const x=new Date(d.getFullYear(),d.getMonth()+i,1);a.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`)}$('period').innerHTML=a.map(p=>`<option value="${p}" ${p===PERIOD?'selected':''}>${monthName(p)}</option>`).join('')}
+function rpcScope(){return ACCESS?.is_master?SCOPE:(ACCESS?.rdc_name||SCOPE)}
+async function loadAll(){setLoading(true);try{SCOPE=rpcScope();if($('scope'))$('scope').value=SCOPE;const [o,inc,cmp,tr,ex,mh,rh,co]=await Promise.all([
+ safeRpc('breakage_overview',{p_period:PERIOD,p_rdc:SCOPE},{}),safeRpc('breakage_incident_list',{p_period:PERIOD,p_rdc:SCOPE},[]),safeRpc('breakage_rdc_comparison',{p_period:PERIOD},{rows:[]}),safeRpc('breakage_trend',{p_from:monthOffset(PERIOD,-5),p_to:PERIOD,p_rdc:SCOPE},{series:[]}),safeRpc('breakage_exposure_mtd_v51',{p_period:PERIOD,p_rdc:SCOPE},null),safeRpc('breakage_movement_history_v51',{p_rdc:SCOPE},[]),safeRpc('breakage_reconciliation_history',{p_rdc:SCOPE},[]),safeRpc('breakage_cutoff_status_v50',{p_scope:SCOPE},[])
+]);OVERVIEW=o||{};INCIDENTS=inc||[];RDCROWS=cmp?.rows||[];TREND=tr?.series||[];EXPOSURE=ex;MOVEH=mh||[];RECONH=rh||[];CUTOFFS=co||[];renderAll()}finally{setLoading(false)}}
+function setLoading(on){$('refreshBtn').textContent=on?'Memuat…':'↻ Perbarui';$('refreshBtn').disabled=on}
+function totalQty(type){return INCIDENTS.filter(x=>!type||x.incident_type===type).reduce((a,b)=>a+Number(b.qty_box||0),0)}
+function verifiedQty(type){const ok=new Set(['APPROVED_SPV','MASTER_REVIEW','FINAL','CLOSED']);return INCIDENTS.filter(x=>(!type||x.incident_type===type)&&ok.has(String(x.status||'').toUpperCase())).reduce((a,b)=>a+Number(b.qty_box||0),0)}
+function currentExposure(){if(!EXPOSURE)return null;if(SCOPE==='ALL')return EXPOSURE.national||null;return (EXPOSURE.rows||[]).find(x=>x.rdc===SCOPE)||null}
+function renderSummary(){const d=OVERVIEW?.delivery||{},ex=currentExposure(),total=totalQty(),wh=totalQty('warehouse'),del=totalQty('delivery'),rec=totalQty('receiving'),status=ex?.status||'DATA_REQUIRED';$('summaryCards').innerHTML=`
+<div class="card metric"><div class="label">Total Insiden</div><div class="value">${fmt(INCIDENTS.length)}</div><div class="foot">Jumlah kejadian tercatat pada periode ini.</div></div>
+<div class="card metric bad"><div class="label">Total Pecah</div><div class="value">${fmt(total)} <span class="small">BOX</span></div><div class="foot">Seluruh jenis insiden yang tercatat.</div></div>
+<div class="card metric"><div class="label">Pecah Gudang</div><div class="value">${fmt(wh)} <span class="small">BOX</span></div><div class="foot">Terverifikasi: ${fmt(verifiedQty('warehouse'))} BOX.</div></div>
+<div class="card metric"><div class="label">Pecah Pengiriman</div><div class="value">${fmt(del)} <span class="small">BOX</span></div><div class="foot">Terverifikasi: ${fmt(verifiedQty('delivery'))} BOX.</div></div>
+<div class="card metric"><div class="label">Rasio Pecah Pengiriman</div><div class="value">${rate(d.rate)} <span class="small">/10.000</span></div><div class="foot">Pecah kiriman ÷ delivered box × 10.000.</div></div>
+<div class="card metric ${status==='FINAL'?'good':status==='REVIEW_REQUIRED'?'bad':'warn'}"><div class="label">Rasio Pecah Gudang</div><div class="value">${rate(ex?.rate_per_10000)} <span class="small">/10.000</span></div><div class="foot">${dataPill(status)} &nbsp; Exposure ${fmt(ex?.exposure)} BOX.</div></div>`;
+$('heroPeriod').textContent=monthName(PERIOD);$('heroStatus').innerHTML=`${dataPill(status)} · ${SCOPE==='ALL'?'Nasional':esc(SCOPE)}`}
+function incidentRdcRows(){const map={};for(const r of INCIDENTS){const k=r.rdc||'—';const g=map[k]||(map[k]={rdc:k,warehouse:0,delivery:0,receiving:0,cases:0,total:0});const q=Number(r.qty_box||0);g[r.incident_type]=(g[r.incident_type]||0)+q;g.total+=q;g.cases++}return Object.values(map).sort((a,b)=>b.total-a.total)}
+function renderRdcQuick(){let rows=incidentRdcRows();if(!rows.length){$('rdcQuick').innerHTML='<div class="empty">Belum ada insiden pada periode ini.</div>';return}const max=Math.max(...rows.map(x=>x.total),1);$('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.total/max*100)}%"></div></div><div style="text-align:right"><b>${fmt(r.total)}</b> BOX</div></div>`).join('')}</div>`}
+function renderCauseQuick(){const map={};for(const r of INCIDENTS){const k=r.cause||r.sub_category||'Belum diklasifikasi';map[k]=(map[k]||0)+Number(r.qty_box||0)}let rows=Object.entries(map).map(([cause,qty])=>({cause,qty})).sort((a,b)=>b.qty-a.qty).slice(0,5);if(!rows.length){$('causeQuick').innerHTML='<div class="empty">Belum ada data penyebab.</div>';return}const max=Math.max(...rows.map(x=>x.qty),1);$('causeQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><span>${esc(r.cause)}</span><div class="bartrack"><div class="barfill amber" style="width:${Math.max(2,r.qty/max*100)}%"></div></div><div style="text-align:right"><b>${fmt(r.qty)}</b></div></div>`).join('')}</div>`}
+function renderLatest(){const rows=[...INCIDENTS].sort((a,b)=>String(b.occurrence_date).localeCompare(String(a.occurrence_date))).slice(0,8);$('latestIncidents').innerHTML=incidentTableHtml(rows,true)}
+function incidentTableHtml(rows,compact=false){return `<div class="tablewrap"><table class="tbl"><thead><tr><th>Tanggal</th><th>RDC</th><th>Jenis</th><th>Item</th><th>Qty</th><th>No BA</th><th>Status</th><th></th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${esc(r.occurrence_date)}</td><td>${esc(r.rdc)}</td><td>${esc(typeLabel(r.incident_type))}</td><td>${esc(r.item_code)}</td><td><b>${fmt(r.qty_box)}</b> BOX</td><td>${esc(r.no_ba)}</td><td>${statusPill(r.status)}</td><td><button class="secondary" onclick="openIncident(${Number(r.incident_id)})">Detail</button></td></tr>`).join(''):`<tr><td colspan="8"><div class="empty">Belum ada insiden.</div></td></tr>`}</tbody></table></div>`}
+function groupIncidents(mode){const map={};for(const i of INCIDENTS){const d=new Date(i.occurrence_date+'T00:00:00');let key;if(mode==='daily')key=i.occurrence_date;else if(mode==='weekly')key=`Minggu ${Math.ceil(d.getDate()/7)}`;else key=monthName(PERIOD);const g=map[key]||(map[key]={key,warehouse:0,delivery:0,receiving:0,cases:0,total:0});const q=Number(i.qty_box||0);g[i.incident_type]=(g[i.incident_type]||0)+q;g.total+=q;g.cases++}return Object.values(map)}
+function renderRekap(){const rows=REKAP_MODE==='monthly'?incidentRdcRows():groupIncidents(REKAP_MODE);if(REKAP_MODE==='monthly'){$('rekapSummary').innerHTML=`<div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Insiden</th><th>Gudang</th><th>Pengiriman</th><th>Penerimaan</th><th>Total BOX</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.rdc)}</b></td><td>${fmt(r.cases)}</td><td>${fmt(r.warehouse)}</td><td>${fmt(r.delivery)}</td><td>${fmt(r.receiving)}</td><td><b>${fmt(r.total)}</b></td></tr>`).join('')}<tr class="total"><td>NASIONAL / TOTAL</td><td>${fmt(INCIDENTS.length)}</td><td>${fmt(totalQty('warehouse'))}</td><td>${fmt(totalQty('delivery'))}</td><td>${fmt(totalQty('receiving'))}</td><td>${fmt(totalQty())}</td></tr></tbody></table></div>`}else{$('rekapSummary').innerHTML=`<div class="tablewrap"><table class="tbl"><thead><tr><th>Periode</th><th>Insiden</th><th>Gudang</th><th>Pengiriman</th><th>Penerimaan</th><th>Total BOX</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><b>${esc(r.key)}</b></td><td>${fmt(r.cases)}</td><td>${fmt(r.warehouse)}</td><td>${fmt(r.delivery)}</td><td>${fmt(r.receiving)}</td><td><b>${fmt(r.total)}</b></td></tr>`).join(''):`<tr><td colspan="6"><div class="empty">Belum ada data.</div></td></tr>`}</tbody></table></div>`}
+const t=TREND||[];$('rekapTrend').innerHTML=`<div class="section-title">Trend Rasio 6 Bulan</div>${trendBars(t)}`}
+function trendBars(rows){if(!rows.length)return '<div class="empty">Trend belum tersedia.</div>';const vals=rows.flatMap(x=>[Number(x.delivery_rate||0),Number(x.warehouse_rate||0)]),max=Math.max(...vals,1);return `<div class="tablewrap"><table class="tbl"><thead><tr><th>Periode</th><th>Rasio Pecah Pengiriman</th><th>Rasio Pecah Gudang</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.bulan||r.period||'—')}</td><td>${rate(r.delivery_rate)} /10.000</td><td>${rate(r.warehouse_rate)} /10.000</td></tr>`).join('')}</tbody></table></div>`}
+function renderIncidentPage(){const statuses=[...new Set(INCIDENTS.map(x=>String(x.status||'')).filter(Boolean))];$('filterStatus').innerHTML='<option value="ALL">Semua Status</option>'+statuses.map(s=>`<option value="${esc(s)}">${esc(statusLabel(s))}</option>`).join('');applyIncidentFilter()}
+function applyIncidentFilter(){const t=$('filterType').value,s=$('filterStatus').value,q=$('filterSearch').value.trim().toLowerCase();const rows=INCIDENTS.filter(r=>(t==='ALL'||r.incident_type===t)&&(s==='ALL'||r.status===s)&&(!q||[r.item_code,r.no_ba,r.reported_by,r.incident_no,r.rdc].some(v=>String(v||'').toLowerCase().includes(q))));$('incidentTable').innerHTML=incidentTableHtml(rows)}
+function renderSap(){const ex=currentExposure(),status=ex?.status||'DATA_REQUIRED';$('sapStatus').innerHTML=`<div class="card sapmetric"><span class="small muted">Stock Awal</span><b>${fmt(ex?.opening_stock)} BOX</b></div><div class="card sapmetric"><span class="small muted">Stock Masuk MTD</span><b>${fmt(ex?.stock_in)} BOX</b></div><div class="card sapmetric"><span class="small muted">Stock Keluar MTD</span><b>${fmt(ex?.stock_out)} BOX</b></div><div class="card sapmetric"><span class="small muted">Eksposur Gudang</span><b>${fmt(ex?.exposure)} BOX</b><div style="margin-top:5px">${dataPill(status)}</div></div>`;
+const co=CUTOFFS||[];$('cutoffBlock').innerHTML=`<div class="section-title">Status Stock Awal ${ACCESS?.is_master?'<span class="right"><button class="secondary" onclick="openCutoff()">Tetapkan / Revisi Stock Awal</button></span>':''}</div><div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Tanggal</th><th>Stock Awal</th><th>Sumber</th><th>Status</th></tr></thead><tbody>${co.length?co.map(c=>`<tr><td>${esc(c.rdc)}</td><td>${esc(c.cutoff_date||'—')}</td><td>${c.opening_stock_box==null?'—':fmt(c.opening_stock_box)+' BOX'}</td><td>${esc(c.source||'—')}</td><td>${c.status==='READY'?'<span class="pill p-green">Siap</span>':'<span class="pill p-amber">Perlu Stock Awal</span>'}</td></tr>`).join(''):`<tr><td colspan="5"><div class="empty">Status stock awal belum tersedia.</div></td></tr>`}</tbody></table></div>`;
+$('sapHistory').innerHTML=`<div class="tablewrap"><table class="tbl"><thead><tr><th>File</th><th>RDC</th><th>Mode</th><th>Data s.d.</th><th>Rows</th><th>Perlu Review</th><th>Status</th></tr></thead><tbody>${MOVEH.length?MOVEH.slice(0,30).map(r=>`<tr><td>${esc(r.filename)}</td><td>${esc(r.rdc)}</td><td>${esc(r.mode)}</td><td>${esc(r.data_through_date||'—')}</td><td>${fmt(r.total_rows)}</td><td>${fmt(r.review_rows)}</td><td>${dataPill(r.status==='READY'?'PROVISIONAL':r.status)}</td></tr>`).join(''):`<tr><td colspan="7"><div class="empty">Belum ada upload SAP.</div></td></tr>`}</tbody></table></div>`;
+$('reconHistory').innerHTML=`<div class="tablewrap"><table class="tbl"><thead><tr><th>Periode</th><th>RDC</th><th>File</th><th>Rows</th><th>Status</th><th>Publish</th></tr></thead><tbody>${RECONH.length?RECONH.map(r=>`<tr><td>${esc(r.period)}</td><td>${esc(r.rdc)}</td><td>${esc(r.filename)}</td><td>${fmt(r.total_rows)}</td><td>${esc(r.status)}</td><td>${esc(r.published_at||'—')}</td></tr>`).join(''):`<tr><td colspan="6"><div class="empty">Belum ada rekonsiliasi final.</div></td></tr>`}</tbody></table></div>`}
+function renderAll(){renderSummary();renderRdcQuick();renderCauseQuick();renderLatest();renderRekap();renderIncidentPage();renderSap();$('who').textContent=`${String(ACCESS?.breakage_role||ACCESS?.role||'').toUpperCase()} · ${ACCESS?.is_master?'Nasional':ACCESS?.rdc_name}`;if(!ACCESS?.is_master){$('scope').innerHTML=`<option>${esc(ACCESS.rdc_name)}</option>`;$('scope').disabled=true}}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id==='page-'+p));document.querySelectorAll('[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p))}window.showPage=showPage;
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+function openInputApp(){window.open(BREAKAGE_INPUT_URL,'_blank')}window.openInputApp=openInputApp;$('inputBtn').onclick=openInputApp;$('controlTowerBtn').onclick=()=>window.open(CONTROL_TOWER_URL,'_blank');
+$('refreshBtn').onclick=loadAll;$('period').onchange=async e=>{PERIOD=e.target.value;await loadAll()};$('scope').onchange=async e=>{SCOPE=e.target.value;await loadAll()};
+$('rekapTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{REKAP_MODE=b.dataset.mode;$('rekapTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));renderRekap()});
+['filterType','filterStatus','filterSearch'].forEach(id=>$(id).addEventListener(id==='filterSearch'?'input':'change',applyIncidentFilter));$('clearFilter').onclick=()=>{$('filterType').value='ALL';$('filterStatus').value='ALL';$('filterSearch').value='';applyIncidentFilter()};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove('show'));
+async function openIncident(id){const r=INCIDENTS.find(x=>Number(x.incident_id)===Number(id));if(!r)return;$('detailTitle').textContent=`Detail ${r.incident_no||'Insiden'}`;const fields=[['RDC',r.rdc],['Tanggal',r.occurrence_date],['Jenis',typeLabel(r.incident_type)],['Status',statusLabel(r.status)],['Item',r.item_code],['Qty',fmt(r.qty_box)+' BOX'],['No BA',r.no_ba],['Pelapor',r.reported_by],['No SJ',r.no_sj],['Factory',r.factory],['Customer',r.customer],['Transporter',r.transporter],['Driver',r.driver_name],['No Polisi',r.vehicle_no],['Penyebab',r.cause],['Keterangan',r.cause_detail],['Kejadian Gudang',r.warehouse_event],['Nama Terkait',r.related_person],['Catatan SPV',r.spv_note],['Catatan Master',r.master_note]];$('detailFields').innerHTML=fields.filter(([,v])=>v!==null&&v!==undefined&&v!=='').map(([k,v])=>`<div class="field"><label>${esc(k)}</label><div>${esc(v)}</div></div>`).join('');$('detailPhotos').innerHTML='';$('detailMsg').textContent='Memuat foto…';$('detailModal').classList.add('show');const paths=Array.isArray(r.photo_paths)?r.photo_paths:[];if(!paths.length){$('detailMsg').textContent='Tidak ada foto evidence.';return}try{for(let i=0;i<paths.length;i++){const path=paths[i];const rr=await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/breakage-evidence/${path.split('/').map(encodeURIComponent).join('/')}`,{headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${auth()}`}});if(!rr.ok)throw new Error('Foto tidak dapat dibuka');const blob=await rr.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';const img=document.createElement('img');img.src=url;img.alt='Evidence '+(i+1);a.appendChild(img);$('detailPhotos').appendChild(a)}$('detailMsg').textContent=`${paths.length} foto evidence.`}catch(e){$('detailMsg').textContent=cleanErr(e.message)}}window.openIncident=openIncident;
+function exportExcel(){if(typeof XLSX==='undefined'){alert('Library Excel belum termuat.');return}const rekap=incidentRdcRows(),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rekap),'Rekap RDC');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(INCIDENTS),'Insiden');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(EXPOSURE?.rows||[]),'Eksposur Gudang');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(MOVEH),'Upload SAP');XLSX.writeFile(wb,`SLS_Breakage_Rekap_${PERIOD}_${SCOPE}.xlsx`)}$('exportBtn').onclick=exportExcel;
+function hdrIndex(h,names){for(const n of names){const i=h.findIndex(x=>String(x||'').trim().toLowerCase()===String(n).toLowerCase());if(i>=0)return i}return -1}
+function normRdc(v){return String(v||'').trim().replace(/^RDC\s+/i,'').replace(/\s+/g,' ').replace(/^JAKARTA$/i,'Jakarta').replace(/^SEMARANG$/i,'Semarang').replace(/^SURABAYA$/i,'Surabaya').replace(/^DENPASAR$/i,'Denpasar').replace(/^PALEMBANG$/i,'Palembang')}
+function parseMovementMB51(wb){const sn=wb.SheetNames.find(n=>{const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}),h=(g[0]||[]).map(x=>String(x||'').trim().toLowerCase());return h.includes('posting date')&&h.includes('movement type')&&h.includes('quantity')});if(!sn)return null;const g=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true,cellDates:true}),h=(g[0]||[]).map(x=>String(x||'').trim());const cd=hdrIndex(h,['Posting Date']),cm=hdrIndex(h,['Movement Type','MvT']),cq=hdrIndex(h,['Quantity','Qty']),cs=hdrIndex(h,['Storage Location','SLoc']),cr=hdrIndex(h,['Name 1','RDC','Plant Name']),cma=hdrIndex(h,['Material']),cb=hdrIndex(h,['Batch']),cdo=hdrIndex(h,['Material Document','Mat. Doc.']),citem=hdrIndex(h,['Material Doc.Item','Material Document Item','Mat. Doc. Item','Item']),ch=hdrIndex(h,['Document Header Text','Doc.Header Text']);if([cd,cm,cq,cr].some(i=>i<0))return null;const out=[];for(let i=1;i<g.length;i++){const r=g[i],d=r[cd],mt=String(r[cm]||'').trim(),qty=Math.abs(Number(r[cq])||0),rdc=normRdc(r[cr]);if(!(d instanceof Date)||!mt||!qty||!rdc)continue;out.push({rdc_name:rdc,posting_date:d.toISOString().slice(0,10),movement_type:mt,qty_abs:qty,storage_location:cs>=0?String(r[cs]||'').trim():'',material_code:cma>=0?String(r[cma]||'').trim():'',batch_no:cb>=0?String(r[cb]||'').trim():'',sap_document:cdo>=0?String(r[cdo]||'').trim():'',document_item:citem>=0?String(r[citem]||'').trim():'',document_header_text:ch>=0?String(r[ch]||'').trim():''})}return out.length?out:null}
+$('sapFile').onchange=e=>{if(e.target.files[0])handleMovementFile(e.target.files[0])};
+function handleMovementFile(file){if(typeof XLSX==='undefined'){$('sapMsg').textContent='Library Excel belum termuat.';return}$('sapMsg').textContent='Membaca file…';const fr=new FileReader();fr.onload=async e=>{try{const wb=XLSX.read(e.target.result,{type:'binary',cellDates:true}),rows=parseMovementMB51(wb);if(!rows)throw new Error('MB51 tidak dikenali. Pastikan Posting Date, Movement Type, Quantity dan Name 1/RDC tersedia.');const groups={};for(const r of rows){const period=r.posting_date.slice(0,7),k=r.rdc_name+'|'+period;(groups[k]||(groups[k]=[])).push(r)}const results=[];for(const [k,rr] of Object.entries(groups)){const [rdc,period]=k.split('|');if(!RDC_LIST.includes(rdc)||period!==PERIOD)continue;if(!ACCESS.is_master&&rdc!==ACCESS.rdc_name)continue;results.push(await rpc('breakage_movement_stage_v51',{p_filename:file.name,p_mode:$('sapMode').value,p_rows:rr}))}if(!results.length)throw new Error(`Tidak ada baris ${PERIOD} untuk scope login.`);const reviews=results.reduce((a,b)=>a+Number(b.review_rows||0),0);$('sapMsg').innerHTML=reviews?`Upload berhasil, tetapi <b>${reviews} baris</b> perlu review/mapping movement.`:'✓ Upload berhasil. Exposure sementara diperbarui.';await loadAll()}catch(x){$('sapMsg').textContent='Gagal: '+cleanErr(x.message)}};fr.readAsBinaryString(file)}
+function prefillCutoff(){const c=CUTOFFS.find(x=>x.rdc===$('cRdc').value&&x.status==='READY');$('cDate').value=c?.cutoff_date||'';$('cStock').value=c?.opening_stock_box??'';$('cSource').value=c?.source||'SAP_CUTOFF';$('cRef').value=c?.source_reference||'';$('cReason').value='';$('cMsg').textContent=''}function openCutoff(){if(!ACCESS?.is_master){alert('Hanya Master yang dapat menetapkan Stock Awal.');return}$('cRdc').value=SCOPE==='ALL'?'Jakarta':SCOPE;prefillCutoff();$('cutoffModal').classList.add('show')}window.openCutoff=openCutoff;$('cRdc').onchange=prefillCutoff;
+$('saveCutoff').onclick=async()=>{const p={rdc_name:$('cRdc').value,cutoff_date:$('cDate').value,opening_stock_box:Number($('cStock').value),source:$('cSource').value,source_reference:$('cRef').value.trim(),revision_reason:$('cReason').value.trim()};if(!p.cutoff_date||!(p.opening_stock_box>=0)||!p.revision_reason){$('cMsg').textContent='Tanggal, stock awal dan catatan wajib diisi.';return}try{await rpc('breakage_cutoff_save_v50',{p_payload:p});$('cMsg').textContent='✓ Stock awal tersimpan.';setTimeout(async()=>{$('cutoffModal').classList.remove('show');await loadAll()},500)}catch(e){$('cMsg').textContent='Gagal: '+cleanErr(e.message)}};
+const PLATE_RE=/\b[A-Z]{1,2}\s?\d{3,5}\s?[A-Z]{1,3}\b/;function classify(dht,mvt){const t=String(dht||'').toUpperCase();if(PLATE_RE.test(t))return{main:'delivery',sub:'Transport'};if(mvt==='602')return{main:'delivery',sub:'Loading'};if(/PECAH/.test(t)&&/PALET|PALLET/.test(t))return{main:'warehouse',sub:'Packaging / Pallet'};if(/PERSIAPAN/.test(t))return{main:'warehouse',sub:'Handling / Picking'};if(/PERAPIHAN|\bSO\b|STOCK OPNAME|GUDANG/.test(t))return{main:'warehouse',sub:'Storage / Penyimpanan'};return{main:'warehouse',sub:'Other'}}
+function parseMB51(wb){const sn=wb.SheetNames.find(n=>{const g=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}),h=(g[0]||[]).map(x=>String(x||'').trim());return h.includes('Posting Date')&&h.includes('Movement Type')&&h.includes('Storage Location')});if(!sn)return null;const g=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true,cellDates:true}),h=g[0].map(x=>String(x||'').trim()),c=n=>h.indexOf(n),cd=c('Posting Date'),cq=c('Quantity'),cs=c('Storage Location'),cm=c('Movement Type'),ch=c('Document Header Text'),cr=c('Name 1'),cma=c('Material'),cde=c('Material Description'),cdo=c('Material Document');if([cd,cq,cs,cm,ch,cr].some(x=>x<0))return null;const out=[];for(let i=1;i<g.length;i++){const r=g[i],mt=String(r[cm]||'').trim(),q=Number(r[cq])||0,d=r[cd];if(!(d instanceof Date))continue;let sl=String(r[cs]||''),cls,qty;if(mt==='311'&&sl==='RFB1'&&q>0){qty=q;cls=classify(r[ch],mt)}else if(mt==='602'){qty=Math.abs(q);cls=classify(r[ch],mt)}else continue;const rdc=String(r[cr]||'').trim().replace(/^RDC\s+/i,'');out.push({rdc,period:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01',posting_date:d.toISOString().slice(0,10),main_category:cls.main,sub_category:cls.sub,material:cma>=0?String(r[cma]||''):'',material_desc:cde>=0?String(r[cde]||''):'',qty,sap_document:cdo>=0?String(r[cdo]||''):'',driver_vendor:cls.sub==='Transport'?String(r[ch]||''):'',movement_type:mt,storage_location:sl,document_header_text:String(r[ch]||'')})}return out.length?out:null}
+$('monthEndBtn').onclick=()=>{if(!ACCESS?.is_master&&ACCESS?.role!=='rdc_manager'){alert('Hanya Master / RDC Manager yang dapat memulai rekonsiliasi final.');return}$('reconModal').classList.add('show');reconStep1()};
+function steps(n){return `<div class="tabs">${['1 Upload SAP','2 Preview','3 Reconcile','4 Publish'].map((x,i)=>`<button class="${i+1<=n?'active':''}" disabled>${x}</button>`).join('')}</div>`}
+function reconStep1(){$('reconWizard').innerHTML=steps(1)+`<div class="uploadbox"><b>Upload Full SAP MB51 bulan ${esc(monthName(PERIOD))}</b><div class="sub" style="margin:7px">Format .xlsx / .xls</div><label class="primary" for="mb51Final">Pilih File</label><input id="mb51Final" type="file" accept=".xlsx,.xls"><div id="mbFinalMsg" class="small" style="margin-top:10px"></div></div>`;$('mb51Final').onchange=e=>{if(e.target.files[0])handleFinalMB(e.target.files[0])}}
+function handleFinalMB(file){const msg=$('mbFinalMsg');msg.textContent='Membaca file…';const fr=new FileReader();fr.onload=async e=>{try{const wb=XLSX.read(e.target.result,{type:'binary',cellDates:true}),rows=parseMB51(wb);if(!rows)throw new Error('File MB51 tidak dikenali / kolom wajib tidak ditemukan.');UPLOAD=await rpc('breakage_stage',{p_filename:file.name,p_rows:rows});reconStep2(UPLOAD)}catch(x){msg.textContent='Gagal: '+cleanErr(x.message)}};fr.readAsBinaryString(file)}
+function reconStep2(r){const cats=Object.entries(r.by_category||{});$('reconWizard').innerHTML=steps(2)+`<div class="section-title">${esc(r.rdc)} · ${esc(r.period)} · ${fmt(r.total_rows)} baris</div><div class="tablewrap"><table class="tbl"><thead><tr><th>Kategori</th><th>Sub</th><th>Qty</th><th>Rows</th></tr></thead><tbody>${cats.map(([k,v])=>{const[m,s]=k.split('|');return`<tr><td>${esc(typeLabel(m))}</td><td>${esc(s)}</td><td>${fmt(v.qty)}</td><td>${fmt(v.rows)}</td></tr>`}).join('')}</tbody></table></div><button class="primary" id="reconNext" style="margin-top:12px">Lanjut Reconciliation</button>`;$('reconNext').onclick=reconStep3}
+async function reconStep3(){$('reconWizard').innerHTML=steps(3)+'<div class="empty">Membandingkan dengan data existing…</div>';try{const r=await rpc('breakage_reconcile',{p_upload_id:UPLOAD.upload_batch_id}),rows=r.detail||[];$('reconWizard').innerHTML=steps(3)+`<div class="tablewrap"><table class="tbl"><thead><tr><th>Kategori</th><th>Sub</th><th>Existing</th><th>SAP</th><th>Variance</th><th>Status</th><th>Keputusan</th></tr></thead><tbody>${rows.map((x,i)=>`<tr><td>${esc(typeLabel(x.main_category))}</td><td>${esc(x.sub_category)}</td><td>${fmt(x.existing_qty)}</td><td>${fmt(x.sap_qty)}</td><td>${fmt(x.variance)}</td><td>${esc(x.status)}</td><td><select id="dec${i}"><option value="USE_SAP" ${x.status!=='MATCH'?'selected':''}>Pakai Data SAP</option><option value="KEEP_EXISTING">Pertahankan Existing</option><option value="SKIP">Lewati</option></select></td></tr>`).join('')}</tbody></table></div><button class="primary" id="pubNext" style="margin-top:12px">Lanjut Publish</button>`;$('pubNext').onclick=()=>reconStep4(rows.map((x,i)=>({main_category:x.main_category,sub_category:x.sub_category,action:$('dec'+i).value})))}catch(e){$('reconWizard').innerHTML='<div class="hint warning">'+esc(cleanErr(e.message))+'</div>'}}
+function reconStep4(dec){$('reconWizard').innerHTML=steps(4)+`<div class="hint warning">Publish hanya setelah seluruh hasil diperiksa. Data ini menjadi kontrol transaksi bulanan.</div><div id="publishMsg" class="small" style="margin:10px 0"></div><button class="primary" id="publishBtn">✓ Konfirmasi & Publish</button>`;$('publishBtn').onclick=async()=>{try{$('publishMsg').textContent='Publishing…';await rpc('breakage_publish',{p_upload_id:UPLOAD.upload_batch_id,p_decisions:dec});$('publishMsg').textContent='✓ Published.';setTimeout(async()=>{$('reconModal').classList.remove('show');await loadAll()},700)}catch(e){$('publishMsg').textContent='Gagal: '+cleanErr(e.message)}}}
+async function login(){const u=$('username').value.trim(),pw=$('pw').value;$('loginMsg').textContent='';try{await signIn(u,pw);PERIOD=currentPeriod();SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;initPeriods();$('login').style.display='none';$('app').style.display=window.innerWidth<=760?'block':'grid';await loadAll()}catch(e){$('loginMsg').textContent=cleanErr(e.message)}}
+$('loginBtn').onclick=login;['username','pw'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter')login()});$('logoutBtn').onclick=async()=>{try{if(SESSION?.access_token)await fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${SESSION.access_token}`}})}catch(_){}sessionStorage.removeItem('sls_breakage_session');sessionStorage.removeItem('sls_breakage_username');location.reload()};
+async function restore(){initPeriods();$('username').value=sessionStorage.getItem('sls_breakage_username')||'';const raw=sessionStorage.getItem('sls_breakage_session');if(!raw)return;try{SESSION=JSON.parse(raw);ACCESS=await rpc('breakage_my_access_v44',{});PERIOD=currentPeriod();SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;$('login').style.display='none';$('app').style.display=window.innerWidth<=760?'block':'grid';await loadAll()}catch(e){sessionStorage.removeItem('sls_breakage_session')}}restore();
+</script>
 </body>
 </html>
