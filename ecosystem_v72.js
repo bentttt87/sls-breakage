@@ -1,4 +1,4 @@
-// SLS Breakage Monitoring v73 — canonical login roles + national Manager scope + logistics menu.
+// SLS Breakage Monitoring v74 — canonical roles + logistics menu + dedicated SAP upload button.
 (function(){
   'use strict';
   const national=()=>!!ACCESS?.is_national||!!ACCESS?.is_master;
@@ -21,6 +21,30 @@
     b.style.display=(isSpv()||isManager()||isMaster())?'':'none';
   }
 
+  function ensureSapUploadButton(){
+    const toolbar=document.querySelector('.toolbar'),refresh=$('refreshBtn');
+    if(!toolbar||!refresh)return;
+    let b=$('sapUploadBtnV74');
+    if(!b){
+      b=document.createElement('button');
+      b.id='sapUploadBtnV74';
+      b.className='secondary';
+      b.textContent='⇧ Upload SAP';
+      b.title='Buka menu upload SAP Movement / rekonsiliasi';
+      b.onclick=()=>{
+        if(typeof showPage==='function')showPage('sap');
+        setTimeout(()=>{
+          const box=document.querySelector('#page-sap .uploadbox');
+          if(box){box.scrollIntoView({behavior:'smooth',block:'center'});box.style.boxShadow='0 0 0 3px rgba(22,117,209,.16)';setTimeout(()=>box.style.boxShadow='',1400);}
+        },80);
+      };
+      refresh.insertAdjacentElement('beforebegin',b);
+    }
+    b.style.display=(isSpv()||isMaster())?'':'none';
+    const navSap=document.querySelector('[data-page="sap"]');
+    if(navSap)navSap.textContent='⇧ Upload & Rekonsiliasi SAP';
+  }
+
   const oldRenderAll=renderAll;
   renderAll=function(){
     oldRenderAll();
@@ -34,10 +58,11 @@
       const input=$('inputBtn');if(input)input.textContent='Buka Breakage Input (Read Only)';
     }
     ensureLogisticsMenu();
+    ensureSapUploadButton();
   };
 
   if($('username'))$('username').placeholder='SPV.JKT / MGR.SLS / MASTER.SLS';
   const recOpt=document.querySelector('#filterType option[value="receiving"]');if(recOpt)recOpt.textContent='Penerimaan (Legacy)';
-  setTimeout(ensureLogisticsMenu,300);
-  setTimeout(ensureLogisticsMenu,1200);
+  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();},300);
+  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();},1200);
 })();
