@@ -111,7 +111,7 @@
   window.__SLS_MONTHLY_AGGREGATE_PATCH='v71-20260909';
 })();
 <\/script>`;
-    html=html.replace('</body>',patch+'\n</body>');
+    html=html.replace('</body>',patch+'\n<script src="/ecosystem_v72.js?v=20260909"><\/script>\n</body>');
     document.open();
     document.write(html);
     document.close();
