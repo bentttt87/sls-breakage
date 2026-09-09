@@ -21,11 +21,46 @@
   const originalRenderCauseQuick=renderCauseQuick;
   const originalRenderLatest=renderLatest;
   const originalRenderRekap=renderRekap;
+  const originalLoadAll=loadAll;
+  let AUTO_PERIOD_CHECKED=false;
+  let AUTO_PERIOD_RUNNING=false;
 
-  function monthlyAggregateReady(){
-    const d=OVERVIEW?.delivery||{},w=OVERVIEW?.warehouse||{};
+  function overviewMonthlyReady(o){
+    const d=o?.delivery||{},w=o?.warehouse||{};
     return Number(d.delivered||0)>0 && Number(w.stock_exposure||0)>0;
   }
+
+  function monthlyAggregateReady(){
+    return overviewMonthlyReady(OVERVIEW);
+  }
+
+  async function latestCompleteMonthlyPeriod(startPeriod){
+    for(let i=1;i<=12;i++){
+      const p=monthOffset(startPeriod,-i);
+      const o=await safeRpc('breakage_overview',{p_period:p,p_rdc:SCOPE},{});
+      if(overviewMonthlyReady(o))return p;
+    }
+    return startPeriod;
+  }
+
+  loadAll=async function(){
+    await originalLoadAll();
+    if(AUTO_PERIOD_CHECKED||AUTO_PERIOD_RUNNING)return;
+    AUTO_PERIOD_CHECKED=true;
+    const hasLiveIncident=Array.isArray(INCIDENTS)&&INCIDENTS.length>0;
+    if(monthlyAggregateReady()||hasLiveIncident)return;
+    AUTO_PERIOD_RUNNING=true;
+    try{
+      const latest=await latestCompleteMonthlyPeriod(PERIOD);
+      if(latest&&latest!==PERIOD){
+        PERIOD=latest;
+        initPeriods();
+        if($('period'))$('period').value=PERIOD;
+        await originalLoadAll();
+        window.__SLS_AUTO_PERIOD_FALLBACK=latest;
+      }
+    }finally{AUTO_PERIOD_RUNNING=false}
+  };
 
   renderSummary=function(){
     if(!monthlyAggregateReady())return originalRenderSummary();
@@ -69,8 +104,11 @@
     $('rekapTrend').innerHTML='<div class="section-title">Trend Rasio 6 Bulan</div>'+trendBars(t);
   };
 
+  setTimeout(()=>{
+    try{if(typeof ACCESS!=='undefined'&&ACCESS&&!AUTO_PERIOD_CHECKED)loadAll()}catch(_e){}
+  },300);
   try{if(typeof ACCESS!=='undefined'&&ACCESS)renderAll()}catch(_e){}
-  window.__SLS_MONTHLY_AGGREGATE_PATCH='v70-20260909';
+  window.__SLS_MONTHLY_AGGREGATE_PATCH='v71-20260909';
 })();
 <\/script>`;
     html=html.replace('</body>',patch+'\n</body>');
