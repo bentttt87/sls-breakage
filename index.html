@@ -207,5 +207,6 @@ async function login(){const u=$('username').value.trim(),pw=$('pw').value;$('lo
 $('loginBtn').onclick=login;['username','pw'].forEach(id=>$(id).onkeydown=e=>{if(e.key==='Enter')login()});$('logoutBtn').onclick=async()=>{try{if(SESSION?.access_token)await fetch(`${SUPABASE_URL}/auth/v1/logout`,{method:'POST',headers:{apikey:PUBLIC_ANON,Authorization:`Bearer ${SESSION.access_token}`}})}catch(_){}sessionStorage.removeItem('sls_breakage_session');sessionStorage.removeItem('sls_breakage_username');location.reload()};
 async function restore(){initPeriods();$('username').value=sessionStorage.getItem('sls_breakage_username')||'';const raw=sessionStorage.getItem('sls_breakage_session');if(!raw)return;try{SESSION=JSON.parse(raw);ACCESS=await rpc('breakage_my_access_v44',{});PERIOD=currentPeriod();SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;$('login').style.display='none';$('app').style.display=window.innerWidth<=760?'block':'grid';await loadAll()}catch(e){sessionStorage.removeItem('sls_breakage_session')}}restore();
 </script>
+<script src="/export_photos_v79.js?v=20260909"></script>
 </body>
 </html>
