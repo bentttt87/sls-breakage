@@ -208,5 +208,6 @@ $('loginBtn').onclick=login;['username','pw'].forEach(id=>$(id).onkeydown=e=>{if
 async function restore(){initPeriods();$('username').value=sessionStorage.getItem('sls_breakage_username')||'';const raw=sessionStorage.getItem('sls_breakage_session');if(!raw)return;try{SESSION=JSON.parse(raw);ACCESS=await rpc('breakage_my_access_v44',{});PERIOD=currentPeriod();SCOPE=ACCESS.is_master?'ALL':ACCESS.rdc_name;$('login').style.display='none';$('app').style.display=window.innerWidth<=760?'block':'grid';await loadAll()}catch(e){sessionStorage.removeItem('sls_breakage_session')}}restore();
 </script>
 <script src="/export_photos_v79.js?v=20260909"></script>
+<script src="/sap_master_only_v81.js?v=20260909"></script>
 </body>
 </html>
