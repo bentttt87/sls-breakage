@@ -1,0 +1,32 @@
+name: Promote Breakage Monitoring v81
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sap_master_only_v81.js'
+      - '.github/workflows/promote_v81.yml'
+permissions:
+  contents: write
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject v81 script into index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          tag='<script src="/sap_master_only_v81.js?v=20260909"></script>'
+          if tag not in s:
+              s=s.replace('</body>', tag+'\n</body>')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit production index
+        run: |
+          git config user.name "bentttt87"
+          git config user.email "bentttt87@gmail.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "feat: enforce Master-only SAP UI v81"
+          git push
