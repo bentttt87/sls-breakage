@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SLS Breakage Monitoring — Development Snapshot</title>
+<!--
+  SLS BREAKAGE MONITORING — DEVELOPMENT SNAPSHOT
+  Snapshot: 10 Sep 2026
+  Pinned source commit: bd9674c567911e6fdb3fdd654ccd7ef0ae0b96c3
+
+  Tujuan file ini:
+  - Menjadi entry point/index.html yang aman untuk disimpan dan dikembangkan lagi di masa depan.
+  - Tidak mengubah entry point aplikasi LIVE.
+  - Source dikunci ke commit di atas agar perubahan future di branch main tidak mengubah snapshot ini.
+
+  Komponen snapshot:
+  - dashboard.html  : wrapper monitoring + historical monthly aggregate patch
+  - index.html      : core SLS Breakage Monitoring
+  - ecosystem_v72.js: role governance, Database Ekspedisi menu, tombol khusus Upload SAP
+
+  Untuk development penuh/offline, copy file-file tersebut dari commit yang sama ke satu folder,
+  lalu ganti SNAPSHOT_BASE menjadi path lokal yang sesuai.
+-->
+<style>
+html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#f4f7fb;color:#27466b}
+#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+#boot>div{max-width:560px;background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(10,45,90,.08)}
+small{display:block;margin-top:8px;color:#6d7d94;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="boot"><div><b>Memuat SLS Breakage Monitoring — Development Snapshot</b><small>Snapshot source 10 Sep 2026 · pinned commit bd9674c</small></div></div>
+<script>
+(async function(){
+  const SNAPSHOT_BASE='https://raw.githubusercontent.com/bentttt87/sls-breakage/bd9674c567911e6fdb3fdd654ccd7ef0ae0b96c3/';
+  try{
+    let shell=await fetch(SNAPSHOT_BASE+'dashboard.html',{cache:'no-store'}).then(r=>{
+      if(!r.ok)throw new Error('dashboard.html HTTP '+r.status);
+      return r.text();
+    });
+
+    // Pin semua dependency lokal yang dipakai dashboard wrapper ke commit snapshot yang sama.
+    shell=shell
+      .replace("fetch('/index.html'", "fetch('"+SNAPSHOT_BASE+"index.html'")
+      .replaceAll('/ecosystem_v72.js', SNAPSHOT_BASE+'ecosystem_v72.js');
+
+    document.open();
+    document.write(shell);
+    document.close();
+  }catch(e){
+    document.getElementById('boot').innerHTML='<div style="color:#b42318"><b>Snapshot gagal dimuat.</b><small>'+String(e.message||e)+'</small></div>';
+  }
+})();
+</script>
+</body>
+</html>
