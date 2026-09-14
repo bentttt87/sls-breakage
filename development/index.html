@@ -2,26 +2,21 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SLS Breakage Monitoring — Development Snapshot BA v81</title>
+<title>SLS Breakage Monitoring — Development Snapshot BA v90</title>
 <!--
   SLS BREAKAGE MONITORING — DEVELOPMENT SNAPSHOT
   Snapshot: 14 Sep 2026
-  Core pinned: bd9674c567911e6fdb3fdd654ccd7ef0ae0b96c3
-  Current BA patch commit: 37681166a4c5799e95b59959f23ef85db3361a4b
-
-  Cakupan: Monitoring core + role/SAP/Database Ekspedisi + Rekap BA + printable A4 BA.
-  File ini dipertahankan sebagai index pengembangan/rollback dan tidak mengubah entry point LIVE.
+  BA v90: printable A4 BA memakai official QUADRA + ROMAN branding.
+  Live Monitoring core tetap dipertahankan; perubahan ini menyimpan baseline pengembangan/rollback terbaru.
 -->
-<style>html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#f4f7fb;color:#27466b}#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}#boot>div{max-width:600px;background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(10,45,90,.08)}small{display:block;margin-top:8px;color:#6d7d94;line-height:1.5}</style>
+<style>html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#f4f7fb;color:#27466b}#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}#boot>div{max-width:650px;background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(10,45,90,.08)}small{display:block;margin-top:8px;color:#6d7d94;line-height:1.5}</style>
 </head>
-<body><div id="boot"><div><b>Memuat SLS Breakage Monitoring — Development Snapshot</b><small>14 Sep 2026 · Rekap BA + Print A4</small></div></div>
+<body><div id="boot"><div><b>Memuat SLS Breakage Monitoring — Development Snapshot v90</b><small>Rekap BA + Print A4 dengan official QUADRA + ROMAN</small></div></div>
 <script>
 (async function(){
- const CORE='https://raw.githubusercontent.com/bentttt87/sls-breakage/bd9674c567911e6fdb3fdd654ccd7ef0ae0b96c3/';
- const CURRENT='https://raw.githubusercontent.com/bentttt87/sls-breakage/37681166a4c5799e95b59959f23ef85db3361a4b/';
+ const CURRENT='https://raw.githubusercontent.com/bentttt87/sls-breakage/ef698327a7f8f9f61814e229d0a04d1788892b0f/';
  try{
-   let html=await fetch(CORE+'index.html',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('core index HTTP '+r.status);return r.text()});
-   html=html.replace('</body>','<script src="'+CURRENT+'ecosystem_v72.js?v=snapshot-ba-v81"><\/script></body>');
+   let html=await fetch(CURRENT+'index.html',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('index HTTP '+r.status);return r.text()});
    document.open();document.write(html);document.close();
  }catch(e){document.getElementById('boot').innerHTML='<div style="color:#b42318"><b>Snapshot gagal dimuat.</b><small>'+String(e.message||e)+'</small></div>'}
 })();
