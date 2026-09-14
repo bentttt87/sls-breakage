@@ -1,4 +1,4 @@
-// SLS Breakage Monitoring v74 — canonical roles + logistics menu + dedicated SAP upload button.
+// SLS Breakage Monitoring v81 — canonical roles + logistics + SAP + BA recap/print.
 (function(){
   'use strict';
   const national=()=>!!ACCESS?.is_national||!!ACCESS?.is_master;
@@ -27,42 +27,63 @@
     let b=$('sapUploadBtnV74');
     if(!b){
       b=document.createElement('button');
-      b.id='sapUploadBtnV74';
-      b.className='secondary';
-      b.textContent='⇧ Upload SAP';
+      b.id='sapUploadBtnV74';b.className='secondary';b.textContent='⇧ Upload SAP';
       b.title='Buka menu upload SAP Movement / rekonsiliasi';
-      b.onclick=()=>{
-        if(typeof showPage==='function')showPage('sap');
-        setTimeout(()=>{
-          const box=document.querySelector('#page-sap .uploadbox');
-          if(box){box.scrollIntoView({behavior:'smooth',block:'center'});box.style.boxShadow='0 0 0 3px rgba(22,117,209,.16)';setTimeout(()=>box.style.boxShadow='',1400);}
-        },80);
-      };
+      b.onclick=()=>{if(typeof showPage==='function')showPage('sap');setTimeout(()=>{const box=document.querySelector('#page-sap .uploadbox');if(box){box.scrollIntoView({behavior:'smooth',block:'center'});box.style.boxShadow='0 0 0 3px rgba(22,117,209,.16)';setTimeout(()=>box.style.boxShadow='',1400);}},80);};
       refresh.insertAdjacentElement('beforebegin',b);
     }
     b.style.display=(isSpv()||isMaster())?'':'none';
-    const navSap=document.querySelector('[data-page="sap"]');
-    if(navSap)navSap.textContent='⇧ Upload & Rekonsiliasi SAP';
+    const navSap=document.querySelector('[data-page="sap"]');if(navSap)navSap.textContent='⇧ Upload & Rekonsiliasi SAP';
   }
+
+  function baGroupKey(r){return [r.rdc||'',r.occurrence_date||'',r.no_sj||'',r.customer||'',r.transporter||'',r.driver_name||'',r.vehicle_no||''].map(x=>String(x).trim().toUpperCase()).join('|');}
+  function baGroups(){
+    const map=new Map();
+    (Array.isArray(INCIDENTS)?INCIDENTS:[]).filter(r=>String(r.incident_type||'').toLowerCase()==='delivery').forEach(r=>{
+      const key=baGroupKey(r);if(!map.has(key))map.set(key,{key,rdc:r.rdc,occurrence_date:r.occurrence_date,no_sj:r.no_sj,customer:r.customer,transporter:r.transporter,driver_name:r.driver_name,vehicle_no:r.vehicle_no,items:[]});map.get(key).items.push(r);
+    });
+    return [...map.values()].map(g=>{
+      g.qty=g.items.reduce((a,b)=>a+Number(b.qty_box||0),0);g.refs=[...new Set(g.items.map(x=>x.no_ba).filter(Boolean))];
+      const st=g.items.map(x=>String(x.status||'').toUpperCase());g.status=st.every(x=>['FINAL','CLOSED'].includes(x))?'FINAL':st.every(x=>['APPROVED_SPV','MASTER_REVIEW','FINAL','CLOSED'].includes(x))?'VERIFIED':'OPEN';return g;
+    }).sort((a,b)=>String(b.occurrence_date).localeCompare(String(a.occurrence_date))||String(b.no_sj||'').localeCompare(String(a.no_sj||'')));
+  }
+  function baStatusPill(s){return s==='FINAL'?'<span class="pill p-green">FINAL</span>':s==='VERIFIED'?'<span class="pill p-blue">SPV OK</span>':'<span class="pill p-amber">OPEN</span>';}
+  function ensureBaUI(){
+    if(!$('page-ba')){
+      const sap=$('page-sap');if(sap)sap.insertAdjacentHTML('beforebegin',`<section id="page-ba" class="page"><div class="card section"><div class="section-title">Rekap Berita Acara Kepecahan Pengiriman <span class="right"><button class="secondary" id="baRefresh">↻ Refresh</button></span></div><div class="hint">Satu BA print menggabungkan seluruh item Pecah Kiriman dengan RDC, tanggal, No Surat Jalan, penerima, ekspedisi, driver, dan No Polisi yang sama. Tabel otomatis bertambah jika item lebih dari 5 dan siap print A4 multi-halaman.</div><div class="grid6" style="margin-top:10px"><div class="card metric"><div class="label">TOTAL BA / SJ</div><div class="value" id="baCount">0</div><div class="foot">Sesuai periode & scope aktif</div></div><div class="card metric"><div class="label">TOTAL ITEM</div><div class="value" id="baItems">0</div><div class="foot">Baris barang pecah</div></div><div class="card metric"><div class="label">TOTAL PECAH</div><div class="value" id="baQty">0</div><div class="foot">BOX</div></div></div><div class="filters" style="margin-top:12px;grid-template-columns:1fr 180px"><input id="baSearch" placeholder="Cari No SJ / Penerima / Ekspedisi / Driver / No BA"><select id="baStatusFilter"><option value="ALL">Semua Status</option><option value="OPEN">Open</option><option value="VERIFIED">SPV OK</option><option value="FINAL">Final</option></select></div><div id="baTable"></div></div></section>`);
+    }
+    if(!document.querySelector('.nav [data-page="ba"]')){const sap=document.querySelector('.nav [data-page="sap"]');if(sap){const b=document.createElement('button');b.dataset.page='ba';b.textContent='▧ Rekap BA';b.onclick=()=>{if(typeof showPage==='function')showPage('ba');setTimeout(renderBaRecap,30);};sap.insertAdjacentElement('beforebegin',b);}}
+    if(!document.querySelector('.mobilebar [data-page="ba"]')){const sap=document.querySelector('.mobilebar [data-page="sap"]');if(sap){const b=document.createElement('button');b.dataset.page='ba';b.innerHTML='<b>▧</b>Rekap BA';b.onclick=()=>{if(typeof showPage==='function')showPage('ba');setTimeout(renderBaRecap,30);};sap.insertAdjacentElement('beforebegin',b);sap.parentElement.style.gridTemplateColumns='repeat(5,1fr)';}}
+    const refresh=$('refreshBtn');if(refresh&&!$('baQuickBtn')){const b=document.createElement('button');b.id='baQuickBtn';b.className='secondary';b.textContent='🧾 Rekap BA';b.onclick=()=>{if(typeof showPage==='function')showPage('ba');setTimeout(renderBaRecap,30);};refresh.insertAdjacentElement('beforebegin',b);}
+    if($('baRefresh'))$('baRefresh').onclick=()=>renderBaRecap();
+    if($('baSearch'))$('baSearch').oninput=renderBaRecap;
+    if($('baStatusFilter'))$('baStatusFilter').onchange=renderBaRecap;
+  }
+  function renderBaRecap(){
+    if(!$('baTable'))return;let groups=baGroups();const q=String($('baSearch')?.value||'').trim().toLowerCase(),sf=$('baStatusFilter')?.value||'ALL';
+    if(q)groups=groups.filter(g=>[g.no_sj,g.customer,g.transporter,g.driver_name,g.vehicle_no,...g.refs].some(v=>String(v||'').toLowerCase().includes(q)));
+    if(sf!=='ALL')groups=groups.filter(g=>g.status===sf);
+    const all=baGroups();$('baCount').textContent=fmt(all.length);$('baItems').textContent=fmt(all.reduce((a,g)=>a+g.items.length,0));$('baQty').textContent=fmt(all.reduce((a,g)=>a+g.qty,0));
+    $('baTable').innerHTML=groups.length?`<div class="tablewrap"><table class="tbl"><thead><tr><th>Tanggal</th><th>RDC</th><th>No SJ</th><th>Penerima</th><th>Ekspedisi</th><th>Driver / No Polisi</th><th>Item</th><th>Qty</th><th>Ref BA</th><th>Status</th><th>Aksi</th></tr></thead><tbody>${groups.map(g=>`<tr><td>${esc(g.occurrence_date||'—')}</td><td>${esc(g.rdc||'—')}</td><td><b>${esc(g.no_sj||'—')}</b></td><td>${esc(g.customer||'—')}</td><td>${esc(g.transporter||'—')}</td><td>${esc(g.driver_name||'—')}<div class="small muted">${esc(g.vehicle_no||'—')}</div></td><td>${fmt(g.items.length)}</td><td><b>${fmt(g.qty)}</b> BOX</td><td title="${esc(g.refs.join(', '))}">${esc(g.refs[0]||'—')}${g.refs.length>1?` (+${g.refs.length-1})`:''}</td><td>${baStatusPill(g.status)}</td><td><button class="secondary" onclick='window.printBaGroup(${JSON.stringify(g.key)})'>🖨 Print BA</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Belum ada BA Pecah Kiriman pada periode/scope ini.</div>';
+  }
+  window.printBaGroup=function(key){
+    const g=baGroups().find(x=>x.key===key);if(!g){alert('Data BA tidak ditemukan.');return;}
+    const storageKey='sls_ba_print_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);localStorage.setItem(storageKey,JSON.stringify(g));
+    try{Object.keys(localStorage).filter(k=>k.startsWith('sls_ba_print_')&&k!==storageKey).slice(0,-8).forEach(k=>localStorage.removeItem(k));}catch(_){ }
+    const w=window.open('/ba_print.html?k='+encodeURIComponent(storageKey),'_blank');if(!w)alert('Popup diblokir browser. Izinkan popup untuk mencetak BA.');
+  };
 
   const oldRenderAll=renderAll;
   renderAll=function(){
     oldRenderAll();
-    if(national()){
-      $('scope').innerHTML=ALL_OPTS;$('scope').disabled=false;$('scope').value=SCOPE||'ALL';
-      $('who').textContent=`${isManager()?'MGR':String(ACCESS?.breakage_role||ACCESS?.role||'').toUpperCase()} · Nasional`;
-    }
-    if(isManager()){
-      if($('monthEndBtn')){$('monthEndBtn').disabled=true;$('monthEndBtn').title='Rekonsiliasi final/publish dilakukan Master';}
-      const up=$('sapFile');if(up)up.disabled=true;
-      const input=$('inputBtn');if(input)input.textContent='Buka Breakage Input (Read Only)';
-    }
-    ensureLogisticsMenu();
-    ensureSapUploadButton();
+    if(national()){$('scope').innerHTML=ALL_OPTS;$('scope').disabled=false;$('scope').value=SCOPE||'ALL';$('who').textContent=`${isManager()?'MGR':String(ACCESS?.breakage_role||ACCESS?.role||'').toUpperCase()} · Nasional`;}
+    if(isManager()){if($('monthEndBtn')){$('monthEndBtn').disabled=true;$('monthEndBtn').title='Rekonsiliasi final/publish dilakukan Master';}const up=$('sapFile');if(up)up.disabled=true;const input=$('inputBtn');if(input)input.textContent='Buka Breakage Input (Read Only)';}
+    ensureLogisticsMenu();ensureSapUploadButton();ensureBaUI();renderBaRecap();
   };
 
   if($('username'))$('username').placeholder='SPV.JKT / MGR.SLS / MASTER.SLS';
   const recOpt=document.querySelector('#filterType option[value="receiving"]');if(recOpt)recOpt.textContent='Penerimaan (Legacy)';
-  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();},300);
-  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();},1200);
+  ensureBaUI();
+  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();ensureBaUI();renderBaRecap();},300);
+  setTimeout(()=>{ensureLogisticsMenu();ensureSapUploadButton();ensureBaUI();renderBaRecap();},1200);
 })();
