@@ -2,21 +2,20 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SLS Breakage Monitoring — Development Snapshot BA v90</title>
+<title>SLS Breakage Monitoring — Development Snapshot v91</title>
 <!--
   SLS BREAKAGE MONITORING — DEVELOPMENT SNAPSHOT
   Snapshot: 14 Sep 2026
-  BA v90: printable A4 BA memakai official QUADRA + ROMAN branding.
-  Live Monitoring core tetap dipertahankan; perubahan ini menyimpan baseline pengembangan/rollback terbaru.
+  v91: BA + seluruh foto evidence menjadi satu dokumen PDF-ready; official QUADRA + ROMAN dari logo user dipakai pada aplikasi dan BA.
 -->
-<style>html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#f4f7fb;color:#27466b}#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}#boot>div{max-width:650px;background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(10,45,90,.08)}small{display:block;margin-top:8px;color:#6d7d94;line-height:1.5}</style>
+<style>html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:#f4f7fb;color:#27466b}#boot{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}#boot>div{max-width:680px;background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(10,45,90,.08)}small{display:block;margin-top:8px;color:#6d7d94;line-height:1.5}</style>
 </head>
-<body><div id="boot"><div><b>Memuat SLS Breakage Monitoring — Development Snapshot v90</b><small>Rekap BA + Print A4 dengan official QUADRA + ROMAN</small></div></div>
+<body><div id="boot"><div><b>Memuat SLS Breakage Monitoring — Development Snapshot v91</b><small>Rekap BA · BA + Foto satu dokumen · official QUADRA + ROMAN</small></div></div>
 <script>
 (async function(){
- const CURRENT='https://raw.githubusercontent.com/bentttt87/sls-breakage/ef698327a7f8f9f61814e229d0a04d1788892b0f/';
+ const CURRENT='https://raw.githubusercontent.com/bentttt87/sls-breakage/a0cd5f9ff6393df6ff73d5368d91514d8d220b95/';
  try{
-   let html=await fetch(CURRENT+'index.html',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('index HTTP '+r.status);return r.text()});
+   let html=await fetch(CURRENT+'dashboard_v91.html',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('dashboard_v91 HTTP '+r.status);return r.text()});
    document.open();document.write(html);document.close();
  }catch(e){document.getElementById('boot').innerHTML='<div style="color:#b42318"><b>Snapshot gagal dimuat.</b><small>'+String(e.message||e)+'</small></div>'}
 })();
