@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/dashboard_v101.html" }
+    { "source": "/", "destination": "/dashboard_v102.html" }
   ],
   "headers": [
     {
@@ -10,9 +10,15 @@
       ]
     },
     {
-      "source": "/dashboard_v101.html",
+      "source": "/dashboard_v102.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
+      ]
+    },
+    {
+      "source": "/brand_quadra_roman_v102.svg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
   ]
