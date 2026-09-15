@@ -1,0 +1,44 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>SLS Breakage Monitoring</title></head><body style="margin:0;font-family:Arial,sans-serif;background:#f4f7fb"><div style="padding:24px;color:#52647a">Memuat SLS Breakage Monitoring v101…</div><script>
+(async()=>{try{
+  let html=await fetch('/index.html?core=v101-20260915-1018',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Dashboard '+r.status);return r.text()});
+  const analysis=`<div id="opsAnalysisV101" style="margin-top:12px"><div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:9px"><div><div style="font-size:9px;font-weight:900;letter-spacing:.8px;color:#6d7d94">ANALISA OPERASIONAL</div><div style="font-size:16px;font-weight:900;color:#102746">Profil Breakage</div></div><div id="opsScopeV101" style="margin-left:auto;font-size:10px;color:#6d7d94;font-weight:700">—</div></div><div id="opsGridV101" style="display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:12px"><div class="card section"><div class="section-title">Pecahan by Size</div><div id="opsSizeV101"><div class="empty">Memuat…</div></div></div><div class="card section"><div class="section-title">Pecahan by Case</div><div id="opsCaseV101"><div class="empty">Memuat…</div></div></div><div class="card section"><div class="section-title">Pecahan by Origin</div><div id="opsOriginV101"><div class="empty">Memuat…</div></div></div><div class="card section"><div class="section-title">Pecahan by Vendor Kirim</div><div id="opsVendorV101"><div class="empty">Memuat…</div></div></div></div><div class="hint" style="margin-top:9px">Semua analisa mengikuti filter <b>Periode</b> dan <b>RDC</b> di atas. Pilih <b>Nasional</b> untuk seluruh network atau pilih RDC tertentu untuk analisa lokal.</div></div>`;
+  const rekapMarker='<section id="page-rekap"';
+  const pos=html.indexOf(rekapMarker);
+  if(pos>0){const close=html.lastIndexOf('</section>',pos);if(close>0)html=html.slice(0,close)+analysis+html.slice(close);}
+  html=html.replace('<div class="top-title">Breakage Monitoring</div>','<div class="top-title">Breakage Monitoring <span style="font-size:9px;padding:3px 6px;border:1px solid rgba(255,255,255,.35);border-radius:999px;margin-left:5px">v101</span></div>');
+  const inline=`<script>
+(function(){
+ 'use strict';
+ const byId=id=>document.getElementById(id), esc2=s=>String(s??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
+ const q=r=>Number(r&&r.qty_box||0);
+ function group(list,fn,empty){const m=new Map();(list||[]).forEach(r=>{let k=String(fn(r)||empty||'BELUM DIISI').trim()||empty||'BELUM DIISI';m.set(k,(m.get(k)||0)+q(r));});return [...m].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value||a.label.localeCompare(b.label));}
+ function bar(data,maxRows){const a=data.slice(0,maxRows||10),mx=Math.max(1,...a.map(x=>x.value));if(!a.length)return '<div class="empty">Belum ada data.</div>';return '<div class="barlist">'+a.map((x,i)=>'<div class="barrow"><div title="'+esc2(x.label)+'" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>'+(i+1)+'. '+esc2(x.label)+'</b></div><div class="bartrack"><div class="barfill" style="width:'+Math.max(2,x.value/mx*100)+'%"></div></div><div style="text-align:right;font-weight:800">'+Number(x.value).toLocaleString('id-ID')+' BOX</div></div>').join('')+'</div>';}
+ function foot(data,quality){if(!data.length)return '<div class="small muted" style="margin-top:8px">Belum ada data.</div>';return '<div class="small muted" style="margin-top:8px">Terbesar: <b>'+esc2(data[0].label)+'</b> · '+Number(data[0].value).toLocaleString('id-ID')+' BOX'+(quality?'<br>'+quality:'')+'</div>';}
+ function renderOps(){
+   try{
+     const all=Array.isArray(INCIDENTS)?INCIDENTS:[], del=all.filter(r=>String(r.incident_type||'').toLowerCase()==='delivery');
+     const size=group(all,r=>r.product_size,'BELUM DIKLASIFIKASIKAN');
+     const cases=group(all,r=>String(r.incident_type||'').toLowerCase()==='delivery'?'PECAH KIRIM':String(r.incident_type||'').toLowerCase()==='warehouse'?'PECAH GUDANG':'LAINNYA','LAINNYA');
+     const origin=group(all,r=>String(r.factory||'').toUpperCase(),'BELUM DIISI');
+     const vendor=group(del,r=>String(r.transporter||'').toUpperCase(),'BELUM DIISI');
+     const total=all.reduce((a,b)=>a+q(b),0), szFilled=all.filter(r=>String(r.product_size||'').trim()).reduce((a,b)=>a+q(b),0), orgFilled=all.filter(r=>String(r.factory||'').trim()).reduce((a,b)=>a+q(b),0);
+     if(byId('opsScopeV101'))byId('opsScopeV101').textContent=(SCOPE==='ALL'?'Nasional':SCOPE)+' · '+(typeof monthName==='function'?monthName(PERIOD):PERIOD);
+     if(byId('opsSizeV101'))byId('opsSizeV101').innerHTML=bar(size,10)+foot(size,'Data Size terisi: '+(total?Math.round(szFilled/total*100):0)+'%');
+     if(byId('opsCaseV101'))byId('opsCaseV101').innerHTML=bar(cases,4)+foot(cases,'');
+     if(byId('opsOriginV101'))byId('opsOriginV101').innerHTML=bar(origin,5)+foot(origin,'Data Origin terisi: '+(total?Math.round(orgFilled/total*100):0)+'%');
+     if(byId('opsVendorV101'))byId('opsVendorV101').innerHTML=bar(vendor,10)+foot(vendor,del.length?'Khusus Pecah Kirim':'Belum ada Pecah Kirim');
+   }catch(e){console.error('ops v101',e);}
+ }
+ const src='/brand_quadra_roman_v92.svg?v=20260915-1018';
+ function applyBrand(){['loginLogo','sideLogo'].forEach(id=>{const el=byId(id);if(el)el.innerHTML='<img src="'+src+'" alt="QUADRA + ROMAN" style="display:block;width:'+(id==='sideLogo'?118:205)+'px;max-width:100%;height:auto;object-fit:contain">';});}
+ try{const original=renderAll;renderAll=function(){const r=original.apply(this,arguments);setTimeout(renderOps,0);setTimeout(renderOps,250);return r;};}catch(e){console.warn('renderAll hook',e);}
+ ['period','scope','refreshBtn'].forEach(id=>{const el=byId(id);if(el)el.addEventListener(id==='refreshBtn'?'click':'change',()=>{setTimeout(renderOps,300);setTimeout(renderOps,900);});});
+ const grid=byId('opsGridV101');if(grid){const mq=window.matchMedia('(max-width:760px)');const fit=()=>grid.style.gridTemplateColumns=mq.matches?'1fr':'repeat(2,minmax(280px,1fr))';fit();mq.addEventListener&&mq.addEventListener('change',fit);}
+ applyBrand();renderOps();[250,700,1500,3000].forEach(ms=>setTimeout(()=>{applyBrand();renderOps();},ms));
+ window.__SLS_BREAKAGE_MONITORING_VERSION='v101';
+})();
+<\/script>`;
+  html=html.replace('</body>',inline+'</body>');
+  document.open();document.write(html);document.close();
+}catch(e){document.body.innerHTML='<div style="padding:24px;color:#b42318"><b>Gagal memuat monitoring v101.</b><br>'+String(e.message||e)+'</div>'}})();
+</script></body></html>
