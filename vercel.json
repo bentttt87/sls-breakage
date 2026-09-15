@@ -1,5 +1,19 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/dashboard_v100.html" }
+    { "source": "/", "destination": "/dashboard_v101.html" }
+  ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
+      ]
+    },
+    {
+      "source": "/dashboard_v101.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
+      ]
+    }
   ]
 }
