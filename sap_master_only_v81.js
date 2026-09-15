@@ -1,11 +1,12 @@
-// SLS Breakage Monitoring v103 — SAP upload allowed for Master + SPV RDC; finalization remains Master only.
+// SLS Breakage Monitoring v107 — SAP upload for Master + all SPV RDC; finalization remains Master only.
 (function(){
   'use strict';
   function ready(){return typeof ACCESS!=='undefined' && ACCESS && (ACCESS.role||ACCESS.breakage_role);}
-  function role(){return String(ACCESS?.breakage_role||ACCESS?.role||'').toLowerCase();}
-  function isMaster(){return !!ACCESS?.is_master || role()==='master';}
-  function isSpv(){return role()==='supervisor';}
-  function canUpload(){return isMaster()||isSpv();}
+  function rawRole(){return String(ACCESS?.role||'').toLowerCase();}
+  function breakageRole(){return String(ACCESS?.breakage_role||'').toLowerCase();}
+  function isMaster(){return !!ACCESS?.is_master || rawRole()==='master' || breakageRole()==='master';}
+  function isSpv(){return rawRole()==='supervisor' || breakageRole()==='spv' || breakageRole()==='supervisor';}
+  function canUpload(){return isMaster()||isSpv()||ACCESS?.can_upload_sap===true;}
   function ensureWarning(uploadBox){
     let w=document.getElementById('sapUploadNote');
     if(!w){w=document.createElement('div');w.id='sapUploadNote';w.className='hint warning';w.style.marginTop='10px';uploadBox.appendChild(w);}
@@ -21,8 +22,8 @@
     if(!isMaster() || typeof MOVEH==='undefined') return;
     const host=document.getElementById('sapHistory');
     const table=host?.querySelector('table');
-    if(!table || table.dataset.v103==='1') return;
-    table.dataset.v103='1';
+    if(!table || table.dataset.v107==='1') return;
+    table.dataset.v107='1';
     const hr=table.tHead?.rows?.[0]; if(hr){const th=document.createElement('th');th.textContent='Aksi';hr.appendChild(th);}
     const rows=Array.from(table.tBodies?.[0]?.rows||[]);
     const data=(MOVEH||[]).slice(0,30);
@@ -71,8 +72,8 @@
     if(monthEndBtn) monthEndBtn.style.display=isMaster()?'':'none';
     decorateHistory();
   }
-  [100,300,700,1400,2500].forEach(ms=>setTimeout(apply,ms));
-  document.addEventListener('click',e=>{if(e.target && (e.target.id==='refreshBtn' || e.target.dataset?.page==='sap')) setTimeout(apply,150);});
-  window.addEventListener('focus',()=>setTimeout(apply,100));
-  window.__SLS_SAP_UPLOAD_ACCESS='v103_master_spv';
+  [50,150,350,700,1400,2500,4000].forEach(ms=>setTimeout(apply,ms));
+  document.addEventListener('click',e=>{if(e.target && (e.target.id==='refreshBtn' || e.target.dataset?.page==='sap')) setTimeout(apply,80);});
+  window.addEventListener('focus',()=>setTimeout(apply,80));
+  window.__SLS_SAP_UPLOAD_ACCESS='v107_master_spv_all_rdc';
 })();
