@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 170" role="img" aria-label="QUADRA ROMAN">
+  <rect width="420" height="170" rx="16" fill="#ffffff"/>
+  <g transform="translate(24 18)">
+    <g aria-label="QUADRA">
+      <text x="36" y="48" font-family="Arial,Helvetica,sans-serif" font-size="50" font-weight="900" letter-spacing="1" fill="#ef233c">QUADRA</text>
+      <path d="M43 38 L62 58 L52 68 L33 48 Z" fill="#ffbf1f"/>
+    </g>
+    <line x1="0" y1="70" x2="372" y2="70" stroke="#111" stroke-width="5"/>
+    <g transform="translate(6 78)" aria-label="ROMAN">
+      <path d="M4 46 A48 48 0 0 1 100 46" fill="none" stroke="#ef233c" stroke-width="12"/>
+      <path d="M18 46 A34 34 0 0 1 86 46" fill="none" stroke="#ffb000" stroke-width="9"/>
+      <path d="M31 46 A21 21 0 0 1 73 46" fill="none" stroke="#ffc928" stroke-width="9"/>
+      <path d="M6 47 L55 63 L6 63 Z" fill="#ffb000"/>
+      <circle cx="55" cy="61" r="8" fill="#ef233c" stroke="#fff" stroke-width="3"/>
+      <text x="120" y="60" font-family="Arial,Helvetica,sans-serif" font-size="52" font-weight="900" font-style="italic" letter-spacing="1" fill="#ef233c">ROMAN</text>
+    </g>
+  </g>
+</svg>
