@@ -1,18 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 170" role="img" aria-label="QUADRA ROMAN">
-  <rect width="420" height="170" rx="16" fill="#ffffff"/>
-  <g transform="translate(24 18)">
-    <g aria-label="QUADRA">
-      <text x="36" y="48" font-family="Arial,Helvetica,sans-serif" font-size="50" font-weight="900" letter-spacing="1" fill="#ef233c">QUADRA</text>
-      <path d="M43 38 L62 58 L52 68 L33 48 Z" fill="#ffbf1f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 200" role="img" aria-label="QUADRA ROMAN">
+  <rect width="420" height="200" rx="16" fill="#ffffff"/>
+  <!-- 50% area untuk QUADRA -->
+  <g transform="translate(0 0)">
+    <rect x="0" y="0" width="420" height="100" fill="#ffffff"/>
+    <g transform="translate(54 20)" aria-label="QUADRA">
+      <text x="48" y="52" font-family="Arial,Helvetica,sans-serif" font-size="56" font-weight="900" letter-spacing="1" fill="#ef233c">QUADRA</text>
+      <path d="M50 42 L72 64 L60 76 L38 54 Z" fill="#ffbf1f"/>
     </g>
-    <line x1="0" y1="70" x2="372" y2="70" stroke="#111" stroke-width="5"/>
-    <g transform="translate(6 78)" aria-label="ROMAN">
-      <path d="M4 46 A48 48 0 0 1 100 46" fill="none" stroke="#ef233c" stroke-width="12"/>
-      <path d="M18 46 A34 34 0 0 1 86 46" fill="none" stroke="#ffb000" stroke-width="9"/>
-      <path d="M31 46 A21 21 0 0 1 73 46" fill="none" stroke="#ffc928" stroke-width="9"/>
-      <path d="M6 47 L55 63 L6 63 Z" fill="#ffb000"/>
-      <circle cx="55" cy="61" r="8" fill="#ef233c" stroke="#fff" stroke-width="3"/>
-      <text x="120" y="60" font-family="Arial,Helvetica,sans-serif" font-size="52" font-weight="900" font-style="italic" letter-spacing="1" fill="#ef233c">ROMAN</text>
+  </g>
+  <line x1="28" y1="100" x2="392" y2="100" stroke="#111" stroke-width="4"/>
+  <!-- 50% area untuk ROMAN -->
+  <g transform="translate(0 100)">
+    <rect x="0" y="0" width="420" height="100" fill="#ffffff"/>
+    <g transform="translate(45 12)" aria-label="ROMAN">
+      <path d="M0 48 A46 46 0 0 1 92 48" fill="none" stroke="#ef233c" stroke-width="11"/>
+      <path d="M14 48 A32 32 0 0 1 78 48" fill="none" stroke="#ffb000" stroke-width="8"/>
+      <path d="M27 48 A19 19 0 0 1 65 48" fill="none" stroke="#ffc928" stroke-width="8"/>
+      <path d="M2 49 L48 64 L2 64 Z" fill="#ffb000"/>
+      <circle cx="48" cy="62" r="7" fill="#ef233c" stroke="#fff" stroke-width="3"/>
+      <text x="112" y="63" font-family="Arial,Helvetica,sans-serif" font-size="55" font-weight="900" font-style="italic" letter-spacing="1" fill="#ef233c">ROMAN</text>
     </g>
   </g>
 </svg>
