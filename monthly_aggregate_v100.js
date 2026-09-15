@@ -1,0 +1,83 @@
+// SLS Breakage Monitoring v100 — preserve historical monthly aggregate behavior in a real injected script.
+(function(){
+  const originalRenderSummary=renderSummary;
+  const originalRenderRdcQuick=renderRdcQuick;
+  const originalRenderCauseQuick=renderCauseQuick;
+  const originalRenderLatest=renderLatest;
+  const originalRenderRekap=renderRekap;
+  const originalLoadAll=loadAll;
+  let AUTO_PERIOD_CHECKED=false;
+  let AUTO_PERIOD_RUNNING=false;
+
+  function overviewMonthlyReady(o){
+    const d=o?.delivery||{},w=o?.warehouse||{};
+    return Number(d.delivered||0)>0 && Number(w.stock_exposure||0)>0;
+  }
+  function monthlyAggregateReady(){return overviewMonthlyReady(OVERVIEW)}
+  async function latestCompleteMonthlyPeriod(startPeriod){
+    for(let i=1;i<=12;i++){
+      const p=monthOffset(startPeriod,-i);
+      const o=await safeRpc('breakage_overview',{p_period:p,p_rdc:SCOPE},{});
+      if(overviewMonthlyReady(o))return p;
+    }
+    return startPeriod;
+  }
+
+  loadAll=async function(){
+    await originalLoadAll();
+    if(AUTO_PERIOD_CHECKED||AUTO_PERIOD_RUNNING)return;
+    AUTO_PERIOD_CHECKED=true;
+    const hasLiveIncident=Array.isArray(INCIDENTS)&&INCIDENTS.length>0;
+    if(monthlyAggregateReady()||hasLiveIncident)return;
+    AUTO_PERIOD_RUNNING=true;
+    try{
+      const latest=await latestCompleteMonthlyPeriod(PERIOD);
+      if(latest&&latest!==PERIOD){
+        PERIOD=latest;initPeriods();if($('period'))$('period').value=PERIOD;
+        await originalLoadAll();window.__SLS_AUTO_PERIOD_FALLBACK=latest;
+      }
+    }finally{AUTO_PERIOD_RUNNING=false}
+  };
+
+  renderSummary=function(){
+    if(!monthlyAggregateReady())return originalRenderSummary();
+    const d=OVERVIEW?.delivery||{},w=OVERVIEW?.warehouse||{};
+    const total=Number(OVERVIEW?.total_breakage_box||0),wh=Number(w.pecah_gudang||0),del=Number(d.pecah_kiriman||0);
+    const hasIncidentDetail=Array.isArray(INCIDENTS)&&INCIDENTS.length>0;
+    $('summaryCards').innerHTML=`
+      <div class="card metric"><div class="label">Total Insiden</div><div class="value">${fmt(INCIDENTS.length)}</div><div class="foot">${hasIncidentDetail?'Jumlah kejadian tercatat pada periode ini.':'Detail insiden historis belum tersedia; KPI memakai rekap bulanan.'}</div></div>
+      <div class="card metric bad"><div class="label">Total Pecah</div><div class="value">${fmt(total)} <span class="small">BOX</span></div><div class="foot">Rekap bulanan: Pecah Gudang + Pecah Pengiriman.</div></div>
+      <div class="card metric"><div class="label">Pecah Gudang</div><div class="value">${fmt(wh)} <span class="small">BOX</span></div><div class="foot">Stock Exposure ${fmt(w.stock_exposure)} BOX.</div></div>
+      <div class="card metric"><div class="label">Pecah Pengiriman</div><div class="value">${fmt(del)} <span class="small">BOX</span></div><div class="foot">Delivered Box ${fmt(d.delivered)} BOX.</div></div>
+      <div class="card metric"><div class="label">Rasio Pecah Pengiriman</div><div class="value">${rate(d.rate)} <span class="small">/10.000</span></div><div class="foot">${fmt(del)} ÷ ${fmt(d.delivered)} × 10.000.</div></div>
+      <div class="card metric good"><div class="label">Rasio Pecah Gudang</div><div class="value">${rate(w.rate)} <span class="small">/10.000</span></div><div class="foot"><span class="pill p-green">Data Bulanan</span> &nbsp; ${fmt(wh)} ÷ ${fmt(w.stock_exposure)} × 10.000.</div></div>`;
+    $('heroPeriod').textContent=monthName(PERIOD);
+    $('heroStatus').innerHTML='<span class="pill p-green">Data Bulanan Lengkap</span> · '+(SCOPE==='ALL'?'Nasional':esc(SCOPE));
+  };
+
+  renderRdcQuick=function(){
+    if(Array.isArray(INCIDENTS)&&INCIDENTS.length)return originalRenderRdcQuick();
+    if(!monthlyAggregateReady()||!Array.isArray(RDCROWS)||!RDCROWS.length)return originalRenderRdcQuick();
+    $('rdcQuick').innerHTML='<div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Rasio Pengiriman</th><th>Rasio Gudang</th><th>Status</th></tr></thead><tbody>'+RDCROWS.map(r=>'<tr><td><b>'+esc(r.rdc)+'</b></td><td>'+rate(r.d_rate)+' /10.000</td><td>'+rate(r.w_rate)+' /10.000</td><td>'+(r.status==='ON TARGET'?'<span class="pill p-green">On Target</span>':r.status==='ABOVE TARGET'?'<span class="pill p-amber">Above Target</span>':'<span class="pill p-gray">Data</span>')+'</td></tr>').join('')+'</tbody></table></div>';
+  };
+  renderCauseQuick=function(){
+    if(Array.isArray(INCIDENTS)&&INCIDENTS.length)return originalRenderCauseQuick();
+    if(monthlyAggregateReady()){$('causeQuick').innerHTML='<div class="empty">Data penyebab tidak tersedia pada rekap historis bulanan. Detail penyebab mulai terbentuk dari Breakage Input.</div>';return;}
+    return originalRenderCauseQuick();
+  };
+  renderLatest=function(){
+    if(Array.isArray(INCIDENTS)&&INCIDENTS.length)return originalRenderLatest();
+    if(monthlyAggregateReady()){$('latestIncidents').innerHTML='<div class="empty">Detail insiden belum tersedia untuk periode historis ini. Angka KPI tetap memakai rekap bulanan resmi.</div>';return;}
+    return originalRenderLatest();
+  };
+  renderRekap=function(){
+    if(REKAP_MODE!=='monthly'||!monthlyAggregateReady()||(Array.isArray(INCIDENTS)&&INCIDENTS.length))return originalRenderRekap();
+    const rows=Array.isArray(RDCROWS)?RDCROWS:[];
+    $('rekapSummary').innerHTML='<div class="hint" style="margin-bottom:10px"><b>Rekap historis:</b> data numerator dan denominator bulanan tersedia, tetapi detail incident per kejadian belum tersedia. Rate tetap dihitung SUM numerator ÷ SUM denominator.</div><div class="tablewrap"><table class="tbl"><thead><tr><th>RDC</th><th>Rasio Pecah Pengiriman</th><th>Rasio Pecah Gudang</th><th>Status Delivery</th></tr></thead><tbody>'+rows.map(r=>'<tr><td><b>'+esc(r.rdc)+'</b></td><td>'+rate(r.d_rate)+' /10.000</td><td>'+rate(r.w_rate)+' /10.000</td><td>'+esc(r.status||'—')+'</td></tr>').join('')+'</tbody></table></div>';
+    const t=TREND||[];$('rekapTrend').innerHTML='<div class="section-title">Trend Rasio 6 Bulan</div>'+trendBars(t);
+  };
+
+  setTimeout(()=>{try{if(typeof ACCESS!=='undefined'&&ACCESS&&!AUTO_PERIOD_CHECKED)loadAll()}catch(_e){}},300);
+  try{if(typeof ACCESS!=='undefined'&&ACCESS)renderAll()}catch(_e){}
+  window.__SLS_MONTHLY_AGGREGATE_PATCH='v100';
+})();
