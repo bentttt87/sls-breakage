@@ -1,4 +1,4 @@
-// SLS Breakage Monitoring v111 — flexible SAP weekly upload, daily BOX ledger, no normal Stock Awal workflow.
+// SLS Breakage Monitoring v112 — flexible SAP weekly upload + balanced summary layout.
 (function(){
   'use strict';
   function ready(){return typeof ACCESS!=='undefined' && ACCESS && (ACCESS.role||ACCESS.breakage_role);}
@@ -18,6 +18,16 @@
   }
   function dateLabel(v){if(!v)return '—';const d=new Date(v+'T00:00:00');return Number.isNaN(d.getTime())?String(v):new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric'}).format(d)}
   try{dataPill=statusPillV111}catch(_){window.dataPill=statusPillV111}
+
+  function ensureBalancedSummaryLayout(){
+    let s=id('balancedSummaryLayoutV112');
+    if(!s){
+      s=document.createElement('style');
+      s.id='balancedSummaryLayoutV112';
+      s.textContent='#page-ringkasan .two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:stretch}#page-ringkasan .two>.card{height:100%;min-width:0}@media(max-width:1180px){#page-ringkasan .two{grid-template-columns:1fr!important}}';
+      document.head.appendChild(s);
+    }
+  }
 
   function sourceLabel(s){return ({MONTHLY_SAP:'SAP bulan sebelumnya',SAP_DAILY_LEDGER:'SAP movement',MASTER_CORRECTION:'Koreksi Master'})[String(s||'').toUpperCase()]||s||'—'}
   function renderSapV111(){
@@ -82,7 +92,7 @@
   function ensureWarning(uploadBox){let w=id('sapUploadNote');if(!w){w=document.createElement('div');w.id='sapUploadNote';w.className='hint warning';w.style.marginTop='10px';uploadBox.appendChild(w)}w.innerHTML='Upload SAP hanya dapat dilakukan oleh <b>Master Nasional</b> atau <b>SPV RDC</b>.'}
   function ensureRoleNote(uploadBox){let n=id('sapDailyMtdNote');if(!n){n=document.createElement('div');n.id='sapDailyMtdNote';n.className='hint';n.style.marginTop='10px';uploadBox.appendChild(n)}n.innerHTML='Sistem menggunakan <b>Posting Date terakhir di file</b> sebagai tanggal data. Upload terlambat, overlap, atau file yang sama tetap aman karena data RDC + tanggal <b>diganti, bukan dijumlahkan dua kali</b>. Hanya UOM <b>BOX</b> yang masuk denominator Breakage.'}
   function apply(){
-    if(!ready())return;const allowed=canUpload(),sapFile=id('sapFile'),uploadBox=sapFile?.closest('.uploadbox'),monthEndBtn=id('monthEndBtn');
+    if(!ready())return;ensureBalancedSummaryLayout();const allowed=canUpload(),sapFile=id('sapFile'),uploadBox=sapFile?.closest('.uploadbox'),monthEndBtn=id('monthEndBtn');
     if(uploadBox){const label=uploadBox.querySelector('label[for="sapFile"]'),mode=id('sapMode'),title=uploadBox.querySelector('b'),sub=uploadBox.querySelector('.sub');
       if(title)title.textContent='Upload SAP Stock & Movement';if(sub)sub.textContent=isSpv()?'Upload SAP untuk RDC Anda. Jadwal Senin adalah target operasional, bukan batas sistem.':'Upload SAP per RDC. Tanggal checkpoint otomatis mengikuti data terakhir dalam file.';
       if(allowed){if(label){label.style.display='inline-block';label.textContent='Pilih File SAP'}sapFile.disabled=false;if(mode){mode.style.display='inline-block';if(isSpv()&&mode.value==='MONTH_END')mode.value='MTD'}id('sapUploadNote')?.remove();ensureRoleNote(uploadBox);sapFile.onchange=e=>{if(e.target.files?.[0])handleMovementFileV111(e.target.files[0])};}
@@ -94,5 +104,5 @@
   [30,100,250,600,1200,2500,4500].forEach(ms=>setTimeout(apply,ms));
   document.addEventListener('click',e=>{if(e.target&&(e.target.id==='refreshBtn'||e.target.dataset?.page==='sap'))setTimeout(apply,80)});
   window.addEventListener('focus',()=>setTimeout(apply,80));
-  window.__SLS_SAP_UPLOAD_ACCESS='v111_daily_ledger';
+  window.__SLS_SAP_UPLOAD_ACCESS='v112_daily_ledger_balanced_layout';
 })();
