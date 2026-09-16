@@ -1,4 +1,4 @@
-name: Promote Breakage Period Views v110
+name: Promote Breakage Multi Filter v111
 on:
   push:
     branches: [main]
@@ -12,15 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inject v110 period view script into index
+      - name: Promote v111 multi-filter script
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          tag='<script src="/period_view_v110.js?v=20260916"></script>'
-          if tag not in s:
-              s=s.replace('</body>', tag+'\n</body>')
+          old='<script src="/period_view_v110.js?v=20260916"></script>'
+          new='<script src="/period_view_v110.js?v=20260916v111"></script>'
+          if old in s:
+              s=s.replace(old,new)
+          elif new not in s:
+              s=s.replace('</body>',new+'\n</body>')
           p.write_text(s,encoding='utf-8')
           PY
       - name: Commit production index
@@ -28,5 +31,5 @@ jobs:
           git config user.name "bentttt87"
           git config user.email "bentttt87@gmail.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "feat: add month year annual-average period views v110"
+          git diff --cached --quiet || git commit -m "feat: enable multi-select year month RDC filters v111"
           git push
