@@ -1,0 +1,32 @@
+name: Promote Breakage Period Views v110
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'period_view_v110.js'
+      - '.github/workflows/promote_v110.yml'
+permissions:
+  contents: write
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject v110 period view script into index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          tag='<script src="/period_view_v110.js?v=20260916"></script>'
+          if tag not in s:
+              s=s.replace('</body>', tag+'\n</body>')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit production index
+        run: |
+          git config user.name "bentttt87"
+          git config user.email "bentttt87@gmail.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "feat: add month year annual-average period views v110"
+          git push
