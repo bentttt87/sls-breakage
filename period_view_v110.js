@@ -78,7 +78,7 @@
 
   core.onload=()=>{
     installTerminology();
-    setTimeout(()=>{try{if(window.SESSION&&typeof window.loadAll==='function')window.loadAll();}catch(_){ }},150);
+    setTimeout(()=>{try{if(typeof SESSION!=='undefined'&&SESSION&&typeof loadAll==='function')loadAll();}catch(_){ }},150);
   };
   core.onerror=()=>console.error('Breakage Monitoring core v111 gagal dimuat.');
   document.head.appendChild(core);
