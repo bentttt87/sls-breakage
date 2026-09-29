@@ -1,11 +1,27 @@
-// SLS Breakage Monitoring v115 — terminology + mobile filter close hotfix.
+// SLS Breakage Monitoring v116 — terminology + mobile filter close + QUADRA ROMAN branding.
 // The v111 multi-filter core is preserved separately; this loader applies display-only terminology.
 // Backend incident_type values remain delivery/warehouse for compatibility.
 (function(){
   'use strict';
   const core=document.createElement('script');
-  core.src='/period_view_core_v111.js?v=20260925-v115';
+  core.src='/period_view_core_v111.js?v=20260929-v116';
   core.async=false;
+
+  function installBrand(){
+    const src='https://raw.githubusercontent.com/bentttt87/sls-breakage-input/main/brand_quadra_roman_v92.svg?v=20260929-v116';
+    const loginLogo=document.getElementById('loginLogo');
+    if(loginLogo){
+      loginLogo.innerHTML=`<img src="${src}" alt="QUADRA ROMAN" style="display:block;width:120px;max-width:120px;height:auto">`;
+    }
+    const sideLogo=document.getElementById('sideLogo');
+    if(sideLogo){
+      sideLogo.innerHTML=`<img src="${src}" alt="QUADRA ROMAN" style="display:block;width:104px;max-width:104px;height:auto;border-radius:5px">`;
+    }
+    const box=document.querySelector('.login-box');
+    if(box) box.style.width='min(440px,100%)';
+    const row=document.querySelector('.login .brandrow');
+    if(row){row.style.gap='14px';row.style.alignItems='center';}
+  }
 
   function installTerminology(){
     const canonicalType=v=>{
@@ -65,8 +81,11 @@
     [100,400,1000].forEach(ms=>setTimeout(add,ms));
   }
 
+  installBrand();
+  [150,500,1200].forEach(ms=>setTimeout(installBrand,ms));
+
   core.onload=()=>{
-    installTerminology();installFilterClose();
+    installBrand();installTerminology();installFilterClose();
     setTimeout(()=>{try{if(typeof SESSION!=='undefined'&&SESSION&&typeof loadAll==='function')loadAll();}catch(_){ }},150);
   };
   core.onerror=()=>console.error('Breakage Monitoring core v111 gagal dimuat.');
