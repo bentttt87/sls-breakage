@@ -1,4 +1,4 @@
-// Breakage Monitoring v111 — independent multi-select Year / Month / RDC filters
+// Breakage Monitoring v122 — independent multi-select Year / Month / RDC filters
 (() => {
   const MONTHS=[
     [1,'Januari'],[2,'Februari'],[3,'Maret'],[4,'April'],[5,'Mei'],[6,'Juni'],
@@ -108,6 +108,11 @@
   function ratioFromRows(rows,numKey,denKey){let n=0,d=0,c=0;for(const r of rows){const den=Number(r[denKey]||0);if(den>0){n+=Number(r[numKey]||0);d+=den;c++}}return {rate:d>0?n/d*10000:null,coverage:c}}
   function isSingle(){return F.years.length===1&&F.months.length===1}
 
+  function denPeriodLabel(min,max){
+    if(!min&&!max)return '';
+    if(min&&max&&min!==max)return monthName(min)+'–'+monthName(max);
+    return monthName(max||min);
+  }
   function renderCards(d){
     const rows=usablePeriods(d),single=isSingle(),base=single?(d.periods||[]).find(x=>x.has_data):null;
     const total=single?Number(base?.total_breakage_box||0):average(rows,'total_breakage_box');
@@ -116,13 +121,23 @@
     const dr=ratioFromRows(rows,'pecah_kiriman_box','delivered_box');const wr=ratioFromRows(rows,'pecah_gudang_box','stock_exposure_box');
     const totalSum=rows.reduce((a,b)=>a+Number(b.total_breakage_box||0),0),whSum=rows.reduce((a,b)=>a+Number(b.pecah_gudang_box||0),0),delSum=rows.reduce((a,b)=>a+Number(b.pecah_kiriman_box||0),0);
     const suffix=single?'BOX':'BOX/bln';const lbl=single?'':'Rata-rata ';
+    const dFallback=single&&Number(base?.delivery_fallback_rdc||0)>0;
+    const wFallback=single&&Number(base?.warehouse_fallback_rdc||0)>0;
+    const dSource=single?denPeriodLabel(base?.delivery_den_period_min,base?.delivery_den_period_max):'';
+    const wSource=single?denPeriodLabel(base?.warehouse_den_period_min,base?.warehouse_den_period_max):'';
+    const dFoot=dFallback
+      ? `<span class="pill p-amber">Provisional</span> · Delivered BOX terakhir: ${esc(dSource||'periode sebelumnya')}.`
+      : `Rasio gabungan dari ${fmt(dr.coverage)} bulan yang memiliki Delivered BOX.`;
+    const wFoot=wFallback
+      ? `<span class="pill p-amber">Provisional</span> · Stock Exposure terakhir: ${esc(wSource||'periode sebelumnya')}.`
+      : `Rasio gabungan dari ${fmt(wr.coverage)} bulan yang memiliki Stock Exposure.`;
     $('summaryCards').innerHTML=`
       <div class="card metric"><div class="label">Periode Data</div><div class="value">${fmt(rows.length)} <span class="small">BULAN</span></div><div class="foot">Dipilih ${fmt(d.selected_periods)} bulan · ${selectedRdcLabel()}${rows.length<Number(d.selected_periods||0)?' · data belum lengkap':''}.</div></div>
       <div class="card metric bad"><div class="label">${lbl}Total Pecah</div><div class="value">${fmt(total)} <span class="small">${suffix}</span></div><div class="foot">${single?'Gudang + Pengiriman.':`Total ${fmt(totalSum)} BOX ÷ ${fmt(rows.length)} bulan data.`}</div></div>
       <div class="card metric"><div class="label">${lbl}Pecah Gudang</div><div class="value">${fmt(wh)} <span class="small">${suffix}</span></div><div class="foot">${single?'Periode terpilih.':`Total ${fmt(whSum)} BOX.`}</div></div>
       <div class="card metric"><div class="label">${lbl}Pecah Pengiriman</div><div class="value">${fmt(del)} <span class="small">${suffix}</span></div><div class="foot">${single?'Periode terpilih.':`Total ${fmt(delSum)} BOX.`}</div></div>
-      <div class="card metric"><div class="label">Rasio Pecah Pengiriman</div><div class="value">${rate(dr.rate)} <span class="small">/10.000</span></div><div class="foot">Rasio gabungan dari ${fmt(dr.coverage)} bulan yang memiliki Delivered BOX.</div></div>
-      <div class="card metric"><div class="label">Rasio Pecah Gudang</div><div class="value">${rate(wr.rate)} <span class="small">/10.000</span></div><div class="foot">Rasio gabungan dari ${fmt(wr.coverage)} bulan yang memiliki Stock Exposure.</div></div>`;
+      <div class="card metric"><div class="label">Rasio Pecah Pengiriman</div><div class="value">${rate(dr.rate)} <span class="small">/10.000</span></div><div class="foot">${dFoot}</div></div>
+      <div class="card metric"><div class="label">Rasio Pecah Gudang</div><div class="value">${rate(wr.rate)} <span class="small">/10.000</span></div><div class="foot">${wFoot}</div></div>`;
   }
 
   function renderRdc(d){
