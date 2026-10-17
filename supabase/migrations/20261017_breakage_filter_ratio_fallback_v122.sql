@@ -1,0 +1,5 @@
+-- v122: keep RDC filter ratios populated for current periods when official denominator is not yet posted.
+-- Numerator remains the selected period/RDC. Denominator fallback is read-only/provisional and sourced
+-- from the latest available authoritative Delivered BOX / Stock Exposure record per RDC.
+-- Once same-period denominator exists it automatically takes precedence.
+-- Applied to production Supabase project on 2026-10-17.
