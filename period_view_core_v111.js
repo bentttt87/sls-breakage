@@ -15,8 +15,8 @@
     if(!F.years.length)F.years=[y];
     if(!F.months.length)F.months=[m];
     if(!F.rdcs.length){
-      if(ACCESS && !ACCESS.is_master && ACCESS.rdc_name)F.rdcs=[ACCESS.rdc_name];
-      else if(typeof SCOPE!=='undefined' && SCOPE && SCOPE!=='ALL')F.rdcs=[SCOPE];
+      if(ACCESS && !ACCESS.is_master && !ACCESS.is_national && ACCESS.rdc_name)F.rdcs=[ACCESS.rdc_name];
+      else if(typeof SCOPE!=='undefined' && SCOPE && SCOPE!=='ALL' && SCOPE!=='ALL RDC')F.rdcs=[SCOPE];
       else F.rdcs=[...ALL_RDCS];
     }
   }
@@ -87,7 +87,7 @@
   }
   function updateAccess(){
     if(!ACCESS)return;
-    if(!ACCESS.is_master && ACCESS.rdc_name){
+    if(!ACCESS.is_master && !ACCESS.is_national && ACCESS.rdc_name){
       F.rdcs=[ACCESS.rdc_name];setChecks('mfRdc',F.rdcs);
       const d=$('mfRdc');if(d){d.querySelectorAll('input').forEach(x=>x.disabled=true);d.querySelectorAll('.mf-actions button').forEach(x=>x.style.display='none')}
     }
@@ -96,7 +96,7 @@
   async function applyFilters(){
     const ys=readChecks('mfYear').map(Number),ms=readChecks('mfMonth').map(Number),rs=readChecks('mfRdc');
     if(!ys.length||!ms.length||!rs.length){alert('Pilih minimal 1 Tahun, 1 Bulan, dan 1 RDC.');return}
-    F.years=sortedNums(ys);F.months=sortedNums(ms);F.rdcs=ACCESS&&!ACCESS.is_master&&ACCESS.rdc_name?[ACCESS.rdc_name]:rs;
+    F.years=sortedNums(ys);F.months=sortedNums(ms);F.rdcs=ACCESS&&!ACCESS.is_master&&!ACCESS.is_national&&ACCESS.rdc_name?[ACCESS.rdc_name]:rs;
     updateFilterSummaries();document.querySelectorAll('.mf[open]').forEach(x=>x.removeAttribute('open'));
     PERIOD=latestSelectedPeriod();SCOPE=F.rdcs.length===1?F.rdcs[0]:'ALL';
     if($('period'))$('period').value=PERIOD;if($('scope') && [...$('scope').options].some(o=>o.value===SCOPE))$('scope').value=SCOPE;
