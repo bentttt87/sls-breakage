@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/dashboard_v102.html" }
+    { "source": "/", "destination": "/dashboard_v103.html" }
   ],
   "headers": [
     {
@@ -16,7 +16,7 @@
       ]
     },
     {
-      "source": "/dashboard_v102.html",
+      "source": "/dashboard_v103.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, max-age=0" }
       ]
