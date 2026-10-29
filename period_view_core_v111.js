@@ -146,7 +146,7 @@
     const total=rows.reduce((a,b)=>a+Number(b.val||0),0),max=Math.max(...rows.map(x=>x.val),1);
     const pct=v=>total>0?Number(v)/total*100:0;
     const pctFmt=v=>Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
-    $('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.val/max*100)}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(r.val)}</b> ${multi?'BOX/bln':'BOX'} <span style="color:#0b67b9;font-weight:900">(${pctFmt(pct(r.val))})</span></div></div>`).join('')}</div>`;
+    $('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.val/max*100)}%"></div></div><div class="barqty">${fmt(r.val)} ${multi?'BOX/bln':'BOX'}</div><div class="barpct">${pctFmt(pct(r.val))}</div></div>`).join('')}</div>`;
   }
   function renderCause(d){
     const title=$('causeQuick')?.previousElementSibling;if(title)title.textContent=isSingle()?'Penyebab Terbanyak':'Komposisi Breakage';
@@ -162,15 +162,15 @@
       let rows=Object.entries(map).map(([cause,qty])=>({cause,qty})).sort((a,b)=>b.qty-a.qty).slice(0,5);
       if(rows.length){
         const max=Math.max(...rows.map(x=>x.qty),1);
-        $('causeQuick').innerHTML=`<div class="barlist">${rows.map(r=>{const p=total>0?r.qty/total*100:0;return `<div class="barrow"><span>${esc(r.cause)}</span><div class="bartrack"><div class="barfill amber" style="width:${Math.max(2,r.qty/max*100)}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(r.qty)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(p)})</span></div></div>`}).join('')}</div>`;
+        $('causeQuick').innerHTML=`<div class="barlist">${rows.map(r=>{const p=total>0?r.qty/total*100:0;return `<div class="barrow"><span>${esc(r.cause)}</span><div class="bartrack"><div class="barfill amber" style="width:${Math.max(2,r.qty/max*100)}%"></div></div><div class="barqty">${fmt(r.qty)} BOX</div><div class="barpct">${pctFmt(p)}</div></div>`}).join('')}</div>`;
         return;
       }
     }
     const rows=usablePeriods(d),wh=rows.reduce((a,b)=>a+Number(b.pecah_gudang_box||0),0),del=rows.reduce((a,b)=>a+Number(b.pecah_kiriman_box||0),0),total=wh+del,mx=Math.max(wh,del,1);
     const whPct=total>0?wh/total*100:0,delPct=total>0?del/total*100:0;
     $('causeQuick').innerHTML=`<div class="barlist">
-      <div class="barrow"><span>Pecah Pallet</span><div class="bartrack"><div class="barfill amber" style="width:${wh/mx*100}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(wh)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(whPct)})</span></div></div>
-      <div class="barrow"><span>Pecah Kirim</span><div class="bartrack"><div class="barfill amber" style="width:${del/mx*100}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(del)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(delPct)})</span></div></div>
+      <div class="barrow"><span>Pecah Pallet</span><div class="bartrack"><div class="barfill amber" style="width:${wh/mx*100}%"></div></div><div class="barqty">${fmt(wh)} BOX</div><div class="barpct">${pctFmt(whPct)}</div></div>
+      <div class="barrow"><span>Pecah Kirim</span><div class="bartrack"><div class="barfill amber" style="width:${del/mx*100}%"></div></div><div class="barqty">${fmt(del)} BOX</div><div class="barpct">${pctFmt(delPct)}</div></div>
       </div><div class="mf-note">Komposisi dihitung terhadap Total Pecah pada filter aktif.</div>`;
   }
   function renderTables(d){
