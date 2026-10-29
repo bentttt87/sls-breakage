@@ -1,0 +1,154 @@
+/* SLS Breakage Monitoring — Management UI v110
+   Readable on 1366–1920px displays; responsive on tablets and phones.
+   Layout-only change. KPI formulas, user access and RPC stay untouched. */
+
+:root{--ui-navy:#10315e;--ui-blue:#135ca5;--ui-teal:#0c766e;--ui-violet:#6950a3;--ui-red:#b93835;--ui-amber:#a96d17}
+html,body{font-family:"Segoe UI",Arial,sans-serif;font-size:15px;color:#183250}
+.content{max-width:1800px;margin:0 auto;padding:24px 26px 44px}
+.card{border-color:#dce5f0;border-radius:16px;box-shadow:0 4px 14px rgba(20,47,82,.045)}
+.topbar{height:68px}
+.top-title{font-size:20px}
+.top-meta{font-size:13px}
+.top-btn{font-size:14px;min-height:42px}
+.hero{padding:20px 24px;background:linear-gradient(106deg,#073267 0%,#12579a 74%,#2577b5 100%);gap:26px}
+.hero h1{font-size:clamp(25px,2vw,31px);line-height:1.18;max-width:800px}
+.hero p{font-size:15px;line-height:1.5;max-width:880px}
+.hero .hero-kicker{font-size:12px;letter-spacing:.8px}
+.hero .hero-right{min-width:225px}
+.hero .hero-right b{font-size:22px}
+.hero .small{font-size:13px}
+.sidebar{padding:20px 14px}
+.brand-title{font-size:19px}
+.side-note{font-size:13px;line-height:1.55;background:rgba(255,255,255,.075);padding:14px}
+.side-note b{font-size:14px}
+.nav button{font-size:15px;min-height:49px;padding:13px 15px}
+.nav button.active{background:#1d5796;box-shadow:inset 4px 0 #80bfff}
+.side-bottom{font-size:12px}
+.toolbar{gap:11px;margin:17px 0 18px;align-items:stretch}
+.toolbar .mf{min-width:190px;border:1px solid #cddceb;border-radius:12px;box-shadow:0 2px 8px rgba(15,52,91,.035)}
+.toolbar .mf>summary{min-height:63px;padding:9px 14px;display:grid;grid-template-columns:minmax(0,1fr) 17px;grid-template-rows:auto auto;row-gap:2px;column-gap:8px;align-content:center}
+.toolbar .mf .mf-label{grid-column:1/-1;grid-row:1;font-size:12px;color:#657a94;font-weight:750;letter-spacing:.15px}
+.toolbar .mf .mf-value{grid-column:1;grid-row:2;font-size:16px;font-weight:850;color:#163e6c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toolbar .mf>summary>span:last-child{grid-column:2;grid-row:2;justify-self:end;font-size:17px;color:#466d9e}
+.toolbar .mf[open]{border-color:#4383bf;box-shadow:0 0 0 3px rgba(35,107,180,.1)}
+.toolbar .mf-menu{min-width:275px;border-radius:12px;padding:12px}
+.toolbar .mf-opt{font-size:15px;padding:10px 8px}
+.toolbar .mf-actions button{font-size:13px;padding:9px}
+.toolbar #applyMultiFilter{min-height:63px;font-size:16px;font-weight:850;padding:12px 22px;border-radius:12px}
+.toolbar .secondary,.toolbar .primary{min-height:50px;font-size:14px;padding:11px 16px}
+#summaryCards{grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+#summaryCards .metric{min-height:174px;padding:19px 19px 17px;border-width:1px;border-radius:16px;box-shadow:0 6px 18px rgba(16,45,80,.05)}
+#summaryCards .metric:before{width:6px;border-radius:15px 0 0 15px}
+#summaryCards .metric .label{font-size:15px;font-weight:800;line-height:1.35;color:#214566}
+#summaryCards .metric .value{font-size:clamp(32px,2.65vw,43px);line-height:1.07;letter-spacing:-.5px;margin:12px 0 12px;white-space:normal;overflow-wrap:anywhere}
+#summaryCards .metric .value .small{font-size:14px;font-weight:800;letter-spacing:0}
+#summaryCards .metric .foot{font-size:13px;line-height:1.5;color:#536780;min-height:0}
+#summaryCards .metric .foot b{color:inherit}
+#summaryCards .metric:nth-child(1){background:linear-gradient(145deg,#f0f5fc 0%,#fff 75%);border-color:#d2e1f4}
+#summaryCards .metric:nth-child(1):before{background:#5579ac}
+#summaryCards .metric:nth-child(1) .value{color:#183f77}
+#summaryCards .metric:nth-child(2){background:linear-gradient(145deg,#fff0ef 0%,#fff 78%);border-color:#f3ceca}
+#summaryCards .metric:nth-child(2):before{background:#c5443e}
+#summaryCards .metric:nth-child(2) .value{color:#a72f2c}
+#summaryCards .metric:nth-child(3){background:linear-gradient(145deg,#eef6ff 0%,#fff 78%);border-color:#c9e0f7}
+#summaryCards .metric:nth-child(3):before{background:#2173bf}
+#summaryCards .metric:nth-child(3) .value{color:#145fa5}
+#summaryCards .metric:nth-child(4){background:linear-gradient(145deg,#ecfaf6 0%,#fff 78%);border-color:#bfe4d8}
+#summaryCards .metric:nth-child(4):before{background:#15967c}
+#summaryCards .metric:nth-child(4) .value{color:#087c69}
+#summaryCards .pill{font-size:12px;padding:4px 8px}
+.two{gap:16px;margin-top:16px}
+.section{padding:20px 21px 22px}
+.section-title{font-size:19px;line-height:1.32;font-weight:850;margin-bottom:18px;color:#173a65;flex-wrap:wrap}
+.section-title .secondary{font-size:13px;padding:10px 14px}
+#page-ringkasan .section:has(#rdcQuick){border-top:5px solid #347bbd;background:linear-gradient(#f3f8ff,#fff 90px)}
+#page-ringkasan .section:has(#causeQuick){border-top:5px solid #d5a04b;background:linear-gradient(#fffaf1,#fff 90px)}
+#page-ringkasan .section:has(#sizeQuick107){border-top:5px solid #1e9b87;background:linear-gradient(#eefbf8,#fff 90px)}
+#page-ringkasan .section:has(#factoryQuick107){border-top:5px solid #8370c7;background:linear-gradient(#f6f2ff,#fff 90px)}
+#page-ringkasan .section:has(#latestIncidents){border-top:5px solid #547ba8}
+.barlist{gap:14px}
+.barrow{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(60px,1fr) minmax(85px,.73fr) minmax(68px,.54fr);gap:10px;align-items:center;min-width:0;font-size:14px;line-height:1.35}
+.barrow>span,.barrow>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.barrow>b{color:#173759}
+.barqty{font-size:13.5px;text-align:right;font-weight:800;color:#345371}
+.barpct{font-size:14px;text-align:right;font-weight:900;color:#1a65ad}
+.bartrack{height:12px;background:#e7eef5;border-radius:999px}
+.barfill{background:linear-gradient(90deg,#2b78bb,#7bb4e7)}
+#causeQuick .barfill,#causeQuick .barfill.amber{background:linear-gradient(90deg,#c99334,#efc87f)}
+#rdcQuick .barfill,#rdcQuick .barfill.red{background:linear-gradient(90deg,#367fbc,#8abbe5)}
+.recap-legend107{font-size:12px;font-weight:800;color:#58718f}
+.recap-wrap107{max-height:410px;border-radius:12px}
+.recap-table107{font-size:14px}
+.recap-table107 th{font-size:12px;padding:13px 11px;background:#edf4f9;color:#415f7e;letter-spacing:.1px}
+.recap-table107 td{padding:13px 11px;line-height:1.35}
+.recap-table107 .num{color:#244e78}
+.recap-table107 .pct{color:#1764a9}
+.recap-table107 tr:nth-child(even):not(.total){background:#fafcfe}
+.recap-table107 tr.total td{background:#e8f2fc}
+.share107{height:9px}
+.tbl{font-size:14px}
+.tbl th{font-size:13px;color:#2e557a;background:#eaf1f9;padding:13px 12px;line-height:1.35}
+.tbl td{padding:13px 12px;line-height:1.4}
+.tbl tbody tr:nth-child(even):not(.total){background:#fafcff}
+.tbl tr.total{background:#e8f2fc}
+.tbl .secondary{font-size:13px;min-height:37px}
+.hint{font-size:13px;line-height:1.6}
+.empty{font-size:14px}
+.small{font-size:13px}
+.tabs button{font-size:14px;padding:11px 16px}
+.filters{gap:12px}
+.filters input,.filters select{font-size:14px;min-height:46px;padding:11px}
+.sapmetric{min-height:112px}
+.sapmetric b{font-size:25px}
+.pill{font-size:12px}
+#page-rekap .section,#page-insiden .section,#page-sap .section{border-top:4px solid #377cba}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #7eb0e0;outline-offset:2px}
+@media(min-width:1500px){
+  .content{max-width:1800px;padding-left:30px;padding-right:30px}
+  #summaryCards .metric{min-height:178px}
+  #summaryCards .metric .value{font-size:43px}
+  .barrow{grid-template-columns:minmax(0,1.08fr) minmax(80px,1.25fr) minmax(98px,.7fr) minmax(78px,.5fr)}
+}
+@media(min-width:761px) and (max-width:1280px){
+  .content{padding:19px 19px 38px}
+  #summaryCards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .two{grid-template-columns:1fr}
+  .barrow{grid-template-columns:minmax(140px,1fr) minmax(100px,1.5fr) minmax(110px,.7fr) minmax(80px,.5fr)}
+  .toolbar .mf{min-width:150px}
+}
+@media(max-width:760px){
+  .content{padding:14px 12px 90px}
+  .top-title{font-size:17px}
+  .top-meta{font-size:11px}
+  .hero{padding:16px;border-radius:13px}
+  .hero h1{font-size:23px}
+  .hero p{font-size:13.5px}
+  .hero .hero-right{min-width:0}
+  .toolbar{gap:8px}
+  .toolbar .mf{min-width:calc(50% - 5px);flex:1}
+  .toolbar .mf>summary{min-height:55px;padding:9px 10px}
+  .toolbar .mf .mf-label{font-size:11.5px}
+  .toolbar .mf .mf-value{font-size:14px}
+  .toolbar #applyMultiFilter{flex:1;min-height:55px;font-size:14px}
+  #summaryCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #summaryCards .metric{min-height:164px;padding:15px 13px}
+  #summaryCards .metric .label{font-size:13px}
+  #summaryCards .metric .value{font-size:30px;margin:10px 0}
+  #summaryCards .metric .value .small{font-size:11px}
+  #summaryCards .metric .foot{font-size:11.8px}
+  .section{padding:17px 13px 19px}
+  .section-title{font-size:17px;margin-bottom:13px}
+  .barrow{grid-template-columns:minmax(0,1.05fr) minmax(35px,1fr) minmax(72px,.73fr) minmax(58px,.56fr);gap:6px}
+  .barrow>span,.barrow>b,.barqty,.barpct{font-size:12px}
+  .recap-table107{font-size:12px}
+  .recap-table107 th{font-size:10.8px}
+  .tbl{font-size:12.5px}.tbl th{font-size:12px}
+}
+@media(max-width:430px){
+  #summaryCards{grid-template-columns:1fr}
+  #summaryCards .metric{min-height:138px}
+  #summaryCards .metric .value{font-size:34px}
+  .toolbar .mf{min-width:calc(50% - 5px)}
+  .barrow{grid-template-columns:minmax(0,1fr) minmax(30px,.8fr) minmax(58px,.65fr) minmax(50px,.5fr);gap:5px}
+  .barrow>span,.barrow>b,.barqty,.barpct{font-size:11.5px}
+}
