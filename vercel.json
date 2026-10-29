@@ -11,6 +11,15 @@
       ]
     },
     {
+      "source": "/monitoring_v107.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
       "source": "/index.html",
       "headers": [
         {
@@ -18,33 +27,13 @@
           "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
-    },
+    }
+  ],
+  "redirects": [
     {
-      "source": "/sap_master_only_v81.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/brand_quadra_roman_v102.svg",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
-    },
-    {
-      "source": "/dashboard_v107.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
+      "source": "/",
+      "destination": "/monitoring_v107.html?v=107-20261029-1133",
+      "permanent": false
     }
   ]
 }
