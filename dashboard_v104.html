@@ -1,0 +1,86 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>SLS Breakage Monitoring</title></head><body style="margin:0;font-family:Arial,sans-serif;background:#f4f7fb"><div style="padding:24px;color:#52647a">Memuat SLS Breakage Monitoring v104…</div><script>
+(async()=>{try{
+ let html=await fetch('/index.html?core=v104-20260915-1058',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('Dashboard '+r.status);return r.text()});
+ const analysis=`<div id="opsAnalysisV104" style="margin-top:12px">
+    <div class="ops104-head">
+      <div><div class="ops104-kicker">REKAP BREAKAGE</div><div class="ops104-title">Perbandingan Value & Percentage</div></div>
+      <div id="opsScopeV104" class="ops104-scope">—</div>
+    </div>
+    <div class="ops104-summary">
+      <div class="ops104-mini"><span>Total Breakage</span><b id="opsTotalV104">—</b><small>BOX</small></div>
+      <div class="ops104-mini"><span>Top Size</span><b id="opsTopSizeV104">—</b><small id="opsTopSizeSubV104">—</small></div>
+      <div class="ops104-mini"><span>Top Factory</span><b id="opsTopFactoryV104">—</b><small id="opsTopFactorySubV104">—</small></div>
+    </div>
+    <div class="ops104-grid">
+      <div class="card section ops104-card">
+        <div class="section-title">Breakage by Size <span class="right ops104-legend">VALUE (BOX) · %</span></div>
+        <div id="opsSizeV104"><div class="empty">Memuat rekap size…</div></div>
+      </div>
+      <div class="card section ops104-card">
+        <div class="section-title">Breakage by Factory <span class="right ops104-legend">VALUE (BOX) · %</span></div>
+        <div id="opsFactoryV104"><div class="empty">Memuat rekap factory…</div></div>
+      </div>
+    </div>
+    <div class="ops104-grid ops104-grid-secondary">
+      <div class="card section ops104-card"><div class="section-title">Breakage by Case</div><div id="opsCaseV104"><div class="empty">Memuat Kirim vs Gudang…</div></div></div>
+      <div class="card section ops104-card"><div class="section-title">Breakage by Vendor Kirim</div><div id="opsVendorV104"><div class="empty">Memuat vendor…</div></div></div>
+    </div>
+    <div class="hint" style="margin-top:9px">Semua value menggunakan BOX. Persentase = BOX kategori ÷ total BOX breakage pada <b>Periode + RDC</b> yang dipilih.</div>
+  </div>`;
+ const marker='<div id="summaryCards" class="grid6"></div>';
+ if(html.includes(marker))html=html.replace(marker,marker+analysis);
+ html=html.replace('<div class="top-title">Breakage Monitoring</div>','<div class="top-title">Breakage Monitoring <span style="font-size:9px;padding:3px 6px;border:1px solid rgba(255,255,255,.35);border-radius:999px;margin-left:5px">v104</span></div>');
+ const patch=`<style>
+ .ops104-head{display:flex;gap:10px;align-items:flex-end;margin:0 0 9px}.ops104-kicker{font-size:9px;font-weight:900;letter-spacing:.8px;color:#6d7d94}.ops104-title{font-size:17px;font-weight:900;color:#102746}.ops104-scope{margin-left:auto;font-size:10px;color:#6d7d94;font-weight:800}.ops104-summary{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:10px;margin-bottom:10px}.ops104-mini{background:#fff;border:1px solid #dce5f0;border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(10,35,70,.03)}.ops104-mini span{display:block;font-size:9.5px;font-weight:800;color:#6d7d94;text-transform:uppercase;letter-spacing:.25px}.ops104-mini b{display:inline-block;margin-top:4px;font-size:20px;color:#102746}.ops104-mini small{display:block;margin-top:2px;font-size:10px;color:#6d7d94}.ops104-grid{display:grid;grid-template-columns:repeat(2,minmax(320px,1fr));gap:10px}.ops104-grid-secondary{margin-top:10px}.ops104-card{min-width:0}.ops104-legend{font-size:9px;color:#6d7d94;font-weight:900}.ops104-row{display:grid;grid-template-columns:minmax(95px,135px) 1fr 74px 54px;gap:8px;align-items:center;font-size:10px;margin:9px 0}.ops104-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:850;color:#1f3550}.ops104-track{height:10px;background:#edf2f7;border-radius:99px;overflow:hidden}.ops104-track i{display:block;height:100%;background:linear-gradient(90deg,#1675d1,#55a4ec);border-radius:99px}.ops104-val{text-align:right;font-weight:900;color:#152b47}.ops104-pct{text-align:right;font-weight:900;color:#0b67b9;background:#eef6ff;border-radius:6px;padding:3px 4px}.ops104-foot{margin-top:9px;padding-top:8px;border-top:1px dashed #dbe4ef;font-size:9.5px;color:#60728a;line-height:1.45}
+ .brand{display:block!important;text-align:center;padding:4px 8px 14px!important}.brand #sideLogo{display:flex;justify-content:center;margin-bottom:6px}.brand .brand-title{font-size:15px!important;line-height:1.15}.brand .tag{margin-top:6px}.brandrow{align-items:center!important}.brandrow #loginLogo{flex:0 0 185px}.brandrow #loginLogo img{width:185px!important}.brandrow h1{font-size:19px!important}
+ @media(max-width:1100px){.ops104-grid{grid-template-columns:1fr}.ops104-summary{grid-template-columns:repeat(3,1fr)}}@media(max-width:760px){.ops104-grid{grid-template-columns:1fr}.ops104-summary{grid-template-columns:1fr}.ops104-head{align-items:flex-start;flex-wrap:wrap}.ops104-scope{margin-left:0}.ops104-row{grid-template-columns:minmax(80px,105px) 1fr 66px 50px}.brandrow{display:block!important}.brandrow #loginLogo{margin:0 auto 10px}.brandrow #loginLogo img{margin:auto}}
+ </style><script>
+(function(){'use strict';
+ const byId=id=>document.getElementById(id),esc2=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ const q=r=>Number(r&&r.qty_box||0);
+ const normSize=v=>{const s=String(v??'').trim().replace(/\s+/g,'').replace(/[×X]/g,'x');return s||'BELUM DIKLASIFIKASIKAN'};
+ const factoryOf=r=>{const f=String(r?.factory||'').trim().toUpperCase();if(f==='SRKI'||f==='RCI')return f;const s=String(r?.ceramic_series||'').trim().toUpperCase();return s.startsWith('S')?'SRKI':s.startsWith('R')?'RCI':(f||'BELUM DIKLASIFIKASIKAN')};
+ function group(list,fn,empty){const m=new Map();(list||[]).forEach(r=>{let k=String(fn(r)||empty||'BELUM DIISI').trim()||empty||'BELUM DIISI';m.set(k,(m.get(k)||0)+q(r));});return [...m].map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value||a.label.localeCompare(b.label));}
+ function pct(v,total){return total>0?(Number(v)/Number(total)*100):0}
+ function pctFmt(v){return Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}
+ function bars(data,total,maxRows=10){
+   if(!data.length)return '<div class="empty">Belum ada data.</div>';
+   const a=data.slice(0,maxRows);
+   return a.map(x=>{const p=pct(x.value,total);return '<div class="ops104-row"><div class="ops104-label" title="'+esc2(x.label)+'">'+esc2(x.label)+'</div><div class="ops104-track" title="'+Number(x.value).toLocaleString('id-ID')+' BOX · '+pctFmt(p)+'"><i style="width:'+Math.max(1,Math.min(100,p))+'%"></i></div><div class="ops104-val">'+Number(x.value).toLocaleString('id-ID')+' BOX</div><div class="ops104-pct">'+pctFmt(p)+'</div></div>'}).join('');
+ }
+ function withFoot(data,total,note){
+   const top=data[0],topPct=top?pct(top.value,total):0;
+   return bars(data,total)+(data.length?'<div class="ops104-foot">Kontributor terbesar: <b>'+esc2(top.label)+'</b> · <b>'+Number(top.value).toLocaleString('id-ID')+' BOX</b> · <b>'+pctFmt(topPct)+'</b>'+(note?'<br>'+note:'')+'</div>':'');
+ }
+ function renderOps(){
+   try{
+     const all=Array.isArray(INCIDENTS)?INCIDENTS:[],del=all.filter(r=>String(r.incident_type||'').toLowerCase()==='delivery');
+     const total=all.reduce((a,b)=>a+q(b),0),delTotal=del.reduce((a,b)=>a+q(b),0);
+     const size=group(all,r=>normSize(r.product_size),'BELUM DIKLASIFIKASIKAN');
+     const factory=group(all,r=>factoryOf(r),'BELUM DIKLASIFIKASIKAN');
+     const cases=group(all,r=>String(r.incident_type||'').toLowerCase()==='delivery'?'PECAH KIRIM':String(r.incident_type||'').toLowerCase()==='warehouse'?'PECAH GUDANG':'LAINNYA','LAINNYA');
+     const vendor=group(del,r=>String(r.transporter||'').toUpperCase(),'BELUM DIISI');
+
+     if(byId('opsScopeV104'))byId('opsScopeV104').textContent=(SCOPE==='ALL'?'Nasional':SCOPE)+' · '+(typeof monthName==='function'?monthName(PERIOD):PERIOD);
+     if(byId('opsTotalV104'))byId('opsTotalV104').textContent=Number(total).toLocaleString('id-ID');
+
+     const topSize=size[0],topFactory=factory[0];
+     if(byId('opsTopSizeV104'))byId('opsTopSizeV104').textContent=topSize?topSize.label:'—';
+     if(byId('opsTopSizeSubV104'))byId('opsTopSizeSubV104').textContent=topSize?(Number(topSize.value).toLocaleString('id-ID')+' BOX · '+pctFmt(pct(topSize.value,total))):'—';
+     if(byId('opsTopFactoryV104'))byId('opsTopFactoryV104').textContent=topFactory?topFactory.label:'—';
+     if(byId('opsTopFactorySubV104'))byId('opsTopFactorySubV104').textContent=topFactory?(Number(topFactory.value).toLocaleString('id-ID')+' BOX · '+pctFmt(pct(topFactory.value,total))):'—';
+
+     if(byId('opsSizeV104'))byId('opsSizeV104').innerHTML=withFoot(size,total,'Persentase dihitung terhadap total breakage '+Number(total).toLocaleString('id-ID')+' BOX.');
+     if(byId('opsFactoryV104'))byId('opsFactoryV104').innerHTML=withFoot(factory,total,'Factory menggunakan data incident; Series S/R menjadi fallback bila factory kosong.');
+     if(byId('opsCaseV104'))byId('opsCaseV104').innerHTML=withFoot(cases,total,'Persentase terhadap total breakage.');
+     if(byId('opsVendorV104'))byId('opsVendorV104').innerHTML=withFoot(vendor,delTotal,del.length?'Persentase terhadap total Pecah Kirim.':'Belum ada Pecah Kirim.');
+   }catch(e){console.error('[v104 analysis]',e);}
+ }
+ const logo='/brand_quadra_roman_v104.svg?v=20260915-1058';function applyBrand(){const login=byId('loginLogo'),side=byId('sideLogo');if(login)login.innerHTML='<img src="'+logo+'" alt="QUADRA ROMAN" style="display:block;width:185px;height:auto;object-fit:contain">';if(side)side.innerHTML='<img src="'+logo+'" alt="QUADRA ROMAN" style="display:block;width:168px;max-width:100%;height:auto;object-fit:contain">';}
+ try{const old=renderAll;renderAll=function(){const r=old.apply(this,arguments);setTimeout(renderOps,0);setTimeout(renderOps,160);applyBrand();return r;};}catch(e){console.warn('[v104 render hook]',e)}
+ ['period','scope','refreshBtn'].forEach(id=>{const el=byId(id);if(el)el.addEventListener(id==='refreshBtn'?'click':'change',()=>{setTimeout(renderOps,250);setTimeout(renderOps,700);});});
+ applyBrand();renderOps();[100,350,900,1800,3500].forEach(ms=>setTimeout(()=>{applyBrand();renderOps();},ms));window.__SLS_BREAKAGE_MONITORING_VERSION='v104';
+})();<\/script>`;
+ html=html.replace('</body>',patch+'</body>');document.open();document.write(html);document.close();
+}catch(e){document.body.innerHTML='<div style="padding:24px;color:#b42318"><b>Gagal memuat monitoring v104.</b><br>'+String(e.message||e)+'</div>'}})();
+</script></body></html>
