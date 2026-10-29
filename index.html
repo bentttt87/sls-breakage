@@ -175,9 +175,9 @@ function renderSummary(){
 }
 function incidentRdcRows(){const map={};for(const r of INCIDENTS){const k=r.rdc||'—';const g=map[k]||(map[k]={rdc:k,warehouse:0,delivery:0,receiving:0,cases:0,total:0});const q=Number(r.qty_box||0);g[r.incident_type]=(g[r.incident_type]||0)+q;g.total+=q;g.cases++}return Object.values(map).sort((a,b)=>b.total-a.total)}
 function renderRdcQuick(){
-  let rows=incidentRdcRows();if(!rows.length){$('rdcQuick').innerHTML='<div class="empty">Belum ada insiden pada periode ini.</div>';return}
-  const total=breakageTotal(),max=Math.max(...rows.map(x=>x.total),1);
-  $('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.total/max*100)}%"></div></div><div style="text-align:right;min-width:108px"><b>${fmt(r.total)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctText(r.total,total)})</span></div></div>`).join('')}</div>`
+  let rows=incidentRdcRows().map(r=>({...r,breakage:Number(r.warehouse||0)+Number(r.delivery||0)}));if(!rows.length){$('rdcQuick').innerHTML='<div class="empty">Belum ada insiden pada periode ini.</div>';return}
+  const total=breakageTotal(),max=Math.max(...rows.map(x=>x.breakage),1);
+  $('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.breakage/max*100)}%"></div></div><div style="text-align:right;min-width:108px"><b>${fmt(r.breakage)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctText(r.breakage,total)})</span></div></div>`).join('')}</div>`
 }
 function renderCauseQuick(){
   const map={};for(const r of INCIDENTS){if(!['warehouse','delivery'].includes(String(r.incident_type||'').toLowerCase()))continue;const k=r.cause||r.sub_category||'Belum diklasifikasi';map[k]=(map[k]||0)+Number(r.qty_box||0)}
