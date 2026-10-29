@@ -11,7 +11,7 @@
       ]
     },
     {
-      "source": "/monitoring_v107.html",
+      "source": "/monitoring_v108.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -20,7 +20,16 @@
       ]
     },
     {
-      "source": "/index.html",
+      "source": "/period_view_v110.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/period_view_core_v111.js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -32,7 +41,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/monitoring_v107.html?v=107-20261029-1133",
+      "destination": "/monitoring_v108.html?v=108-20261029-1145",
       "permanent": false
     }
   ]
