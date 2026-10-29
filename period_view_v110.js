@@ -1,10 +1,10 @@
-// SLS Breakage Monitoring v123 — terminology + mobile filter close + QUADRA ROMAN branding.
+// SLS Breakage Monitoring v108 — terminology + mobile filter close + QUADRA ROMAN branding.
 // The v111 multi-filter core is preserved separately; this loader applies display-only terminology.
 // Backend incident_type values remain delivery/warehouse for compatibility.
 (function(){
   'use strict';
   const core=document.createElement('script');
-  core.src='/period_view_core_v111.js?v=20261020-v123';
+  core.src='/period_view_core_v111.js?v=20261029-v108';
   core.async=false;
 
   function installBrand(){
