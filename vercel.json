@@ -11,7 +11,7 @@
       ]
     },
     {
-      "source": "/monitoring_v108.html",
+      "source": "/monitoring_v109.html",
       "headers": [
         {
           "key": "Cache-Control",
@@ -41,7 +41,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/monitoring_v108.html?v=108-20261029-1145",
+      "destination": "/monitoring_v109.html?v=109-20261029-1200",
       "permanent": false
     }
   ]
