@@ -41,7 +41,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/monitoring_v109.html?v=109-20261029-readable",
+      "destination": "/monitoring_v109.html?v=109-20261029-1323",
       "permanent": false
     }
   ]
