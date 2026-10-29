@@ -118,40 +118,60 @@
     const total=single?Number(base?.total_breakage_box||0):average(rows,'total_breakage_box');
     const wh=single?Number(base?.pecah_gudang_box||0):average(rows,'pecah_gudang_box');
     const del=single?Number(base?.pecah_kiriman_box||0):average(rows,'pecah_kiriman_box');
-    const dr=ratioFromRows(rows,'pecah_kiriman_box','delivered_box');const wr=ratioFromRows(rows,'pecah_gudang_box','stock_exposure_box');
-    const totalSum=rows.reduce((a,b)=>a+Number(b.total_breakage_box||0),0),whSum=rows.reduce((a,b)=>a+Number(b.pecah_gudang_box||0),0),delSum=rows.reduce((a,b)=>a+Number(b.pecah_kiriman_box||0),0);
-    const suffix=single?'BOX':'BOX/bln';const lbl=single?'':'Rata-rata ';
+    const dr=ratioFromRows(rows,'pecah_kiriman_box','delivered_box');
+    const wr=ratioFromRows(rows,'pecah_gudang_box','stock_exposure_box');
+    const suffix=single?'BOX':'BOX/bln',lbl=single?'':'Rata-rata ';
     const dFallback=single&&Number(base?.delivery_fallback_rdc||0)>0;
     const wFallback=single&&Number(base?.warehouse_fallback_rdc||0)>0;
     const dSource=single?denPeriodLabel(base?.delivery_den_period_min,base?.delivery_den_period_max):'';
     const wSource=single?denPeriodLabel(base?.warehouse_den_period_min,base?.warehouse_den_period_max):'';
+    const pct=(v,t)=>t>0?Number(v)/Number(t)*100:0;
+    const pctFmt=v=>Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
     const dFoot=dFallback
-      ? `<span class="pill p-amber">Provisional</span> · Delivered BOX terakhir: ${esc(dSource||'periode sebelumnya')}.`
-      : `Rasio gabungan dari ${fmt(dr.coverage)} bulan yang memiliki Delivered BOX.`;
+      ? `<span class="pill p-amber">Provisional</span> · Rasio ${rate(dr.rate)} /10.000 · Delivered BOX terakhir: ${esc(dSource||'periode sebelumnya')}.`
+      : `Rasio ${rate(dr.rate)} /10.000 · ${fmt(dr.coverage)} bulan memiliki Delivered BOX.`;
     const wFoot=wFallback
-      ? `<span class="pill p-amber">Provisional</span> · Stock Exposure terakhir: ${esc(wSource||'periode sebelumnya')}.`
-      : `Rasio gabungan dari ${fmt(wr.coverage)} bulan yang memiliki Stock Exposure.`;
+      ? `<span class="pill p-amber">Provisional</span> · Rasio ${rate(wr.rate)} /10.000 · Stock Exposure terakhir: ${esc(wSource||'periode sebelumnya')}.`
+      : `Rasio ${rate(wr.rate)} /10.000 · ${fmt(wr.coverage)} bulan memiliki Stock Exposure.`;
+
     $('summaryCards').innerHTML=`
       <div class="card metric"><div class="label">Periode Data</div><div class="value">${fmt(rows.length)} <span class="small">BULAN</span></div><div class="foot">Dipilih ${fmt(d.selected_periods)} bulan · ${selectedRdcLabel()}${rows.length<Number(d.selected_periods||0)?' · data belum lengkap':''}.</div></div>
-      <div class="card metric bad"><div class="label">${lbl}Total Pecah</div><div class="value">${fmt(total)} <span class="small">${suffix}</span></div><div class="foot">${single?'Gudang + Pengiriman.':`Total ${fmt(totalSum)} BOX ÷ ${fmt(rows.length)} bulan data.`}</div></div>
-      <div class="card metric"><div class="label">${lbl}Pecah Gudang</div><div class="value">${fmt(wh)} <span class="small">${suffix}</span></div><div class="foot">${single?'Periode terpilih.':`Total ${fmt(whSum)} BOX.`}</div></div>
-      <div class="card metric"><div class="label">${lbl}Pecah Pengiriman</div><div class="value">${fmt(del)} <span class="small">${suffix}</span></div><div class="foot">${single?'Periode terpilih.':`Total ${fmt(delSum)} BOX.`}</div></div>
-      <div class="card metric"><div class="label">Rasio Pecah Pengiriman</div><div class="value">${rate(dr.rate)} <span class="small">/10.000</span></div><div class="foot">${dFoot}</div></div>
-      <div class="card metric"><div class="label">Rasio Pecah Gudang</div><div class="value">${rate(wr.rate)} <span class="small">/10.000</span></div><div class="foot">${wFoot}</div></div>`;
+      <div class="card metric bad"><div class="label">${lbl}Total Pecah</div><div class="value">${fmt(total)} <span class="small">${suffix}</span></div><div class="foot">Pecah Kirim <b>${pctFmt(pct(del,total))}</b> · Pecah Pallet <b>${pctFmt(pct(wh,total))}</b></div></div>
+      <div class="card metric"><div class="label">${lbl}Pecah Kirim + Rasio</div><div class="value">${fmt(del)} <span class="small">${suffix}</span></div><div class="foot"><b>${pctFmt(pct(del,total))}</b> dari Total Pecah<br>${dFoot}</div></div>
+      <div class="card metric"><div class="label">${lbl}Pecah Pallet + Rasio</div><div class="value">${fmt(wh)} <span class="small">${suffix}</span></div><div class="foot"><b>${pctFmt(pct(wh,total))}</b> dari Total Pecah<br>${wFoot}</div></div>`;
   }
-
   function renderRdc(d){
-    const multi=!isSingle();const rows=(d.by_rdc||[]).map(r=>({...r,val:multi?Number(r.avg_total_breakage_box||0):Number(r.total_breakage_box||0)}));
-    const max=Math.max(...rows.map(x=>x.val),1);$('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.val/max*100)}%"></div></div><div style="text-align:right"><b>${fmt(r.val)}</b> ${multi?'BOX/bln':'BOX'}</div></div>`).join('')}</div>`;
+    const multi=!isSingle();
+    const rows=(d.by_rdc||[]).map(r=>({...r,val:multi?Number(r.avg_total_breakage_box||0):Number(r.total_breakage_box||0)}));
+    const total=rows.reduce((a,b)=>a+Number(b.val||0),0),max=Math.max(...rows.map(x=>x.val),1);
+    const pct=v=>total>0?Number(v)/total*100:0;
+    const pctFmt=v=>Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+    $('rdcQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><b>${esc(r.rdc)}</b><div class="bartrack"><div class="barfill red" style="width:${Math.max(2,r.val/max*100)}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(r.val)}</b> ${multi?'BOX/bln':'BOX'} <span style="color:#0b67b9;font-weight:900">(${pctFmt(pct(r.val))})</span></div></div>`).join('')}</div>`;
   }
   function renderCause(d){
     const title=$('causeQuick')?.previousElementSibling;if(title)title.textContent=isSingle()?'Penyebab Terbanyak':'Komposisi Breakage';
+    const pctFmt=v=>Number(v||0).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
     if(isSingle()){
-      const sel=new Set(F.rdcs),map={};for(const r of (INCIDENTS||[])){if(!sel.has(r.rdc))continue;const k=r.cause||r.sub_category||'Belum diklasifikasi';map[k]=(map[k]||0)+Number(r.qty_box||0)}
-      let rows=Object.entries(map).map(([cause,qty])=>({cause,qty})).sort((a,b)=>b.qty-a.qty).slice(0,5);if(rows.length){const max=Math.max(...rows.map(x=>x.qty),1);$('causeQuick').innerHTML=`<div class="barlist">${rows.map(r=>`<div class="barrow"><span>${esc(r.cause)}</span><div class="bartrack"><div class="barfill amber" style="width:${Math.max(2,r.qty/max*100)}%"></div></div><div style="text-align:right"><b>${fmt(r.qty)}</b></div></div>`).join('')}</div>`;return}
+      const sel=new Set(F.rdcs),map={};let total=0;
+      for(const r of (INCIDENTS||[])){
+        if(!sel.has(r.rdc))continue;
+        if(!['warehouse','delivery'].includes(String(r.incident_type||'').toLowerCase()))continue;
+        const q=Number(r.qty_box||0),k=r.cause||r.sub_category||'Belum diklasifikasi';
+        map[k]=(map[k]||0)+q;total+=q;
+      }
+      let rows=Object.entries(map).map(([cause,qty])=>({cause,qty})).sort((a,b)=>b.qty-a.qty).slice(0,5);
+      if(rows.length){
+        const max=Math.max(...rows.map(x=>x.qty),1);
+        $('causeQuick').innerHTML=`<div class="barlist">${rows.map(r=>{const p=total>0?r.qty/total*100:0;return `<div class="barrow"><span>${esc(r.cause)}</span><div class="bartrack"><div class="barfill amber" style="width:${Math.max(2,r.qty/max*100)}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(r.qty)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(p)})</span></div></div>`}).join('')}</div>`;
+        return;
+      }
     }
-    const rows=usablePeriods(d),wh=rows.reduce((a,b)=>a+Number(b.pecah_gudang_box||0),0),del=rows.reduce((a,b)=>a+Number(b.pecah_kiriman_box||0),0),mx=Math.max(wh,del,1);
-    $('causeQuick').innerHTML=`<div class="barlist"><div class="barrow"><span>Gudang</span><div class="bartrack"><div class="barfill amber" style="width:${wh/mx*100}%"></div></div><div style="text-align:right"><b>${fmt(wh)}</b></div></div><div class="barrow"><span>Pengiriman</span><div class="bartrack"><div class="barfill amber" style="width:${del/mx*100}%"></div></div><div style="text-align:right"><b>${fmt(del)}</b></div></div></div><div class="mf-note">Penyebab detail historis tidak tersedia untuk seluruh bulan; komposisi di atas tidak mengarang penyebab.</div>`;
+    const rows=usablePeriods(d),wh=rows.reduce((a,b)=>a+Number(b.pecah_gudang_box||0),0),del=rows.reduce((a,b)=>a+Number(b.pecah_kiriman_box||0),0),total=wh+del,mx=Math.max(wh,del,1);
+    const whPct=total>0?wh/total*100:0,delPct=total>0?del/total*100:0;
+    $('causeQuick').innerHTML=`<div class="barlist">
+      <div class="barrow"><span>Pecah Pallet</span><div class="bartrack"><div class="barfill amber" style="width:${wh/mx*100}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(wh)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(whPct)})</span></div></div>
+      <div class="barrow"><span>Pecah Kirim</span><div class="bartrack"><div class="barfill amber" style="width:${del/mx*100}%"></div></div><div style="text-align:right;min-width:118px"><b>${fmt(del)}</b> BOX <span style="color:#0b67b9;font-weight:900">(${pctFmt(delPct)})</span></div></div>
+      </div><div class="mf-note">Komposisi dihitung terhadap Total Pecah pada filter aktif.</div>`;
   }
   function renderTables(d){
     const rows=(d.periods||[]).filter(x=>x.has_data);$('rekapTabs').style.display='none';
@@ -164,7 +184,7 @@
   async function renderFilterView(){
     if(!SESSION)return;initState();
     FILTER_DATA=await safeRpc('breakage_filter_summary_v111',{p_years:F.years,p_months:F.months,p_rdcs:F.rdcs},null);if(!FILTER_DATA)return;
-    renderCards(FILTER_DATA);renderRdc(FILTER_DATA);renderCause(FILTER_DATA);renderTables(FILTER_DATA);renderHero(FILTER_DATA);
+    renderCards(FILTER_DATA);renderRdc(FILTER_DATA);renderCause(FILTER_DATA);renderTables(FILTER_DATA);renderHero(FILTER_DATA);try{if(typeof renderSizeFactory107==='function')renderSizeFactory107();}catch(_){ }
   }
 
   loadAll=async function(){
