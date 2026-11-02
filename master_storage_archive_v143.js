@@ -141,13 +141,14 @@ async function exportZip(){
 if(running)return;running=true;$('slsArchExport143').disabled=true;
 try{
 message('Menyiapkan data arsip dari database…');
-const d=await call('breakage_offline_archive_read_v143',{p_period:month(),p_rdc:rdc()});
+const selectedMonth=month(),selectedRdc=rdc();
+const d=await call('breakage_offline_archive_read_v143',{p_period:selectedMonth,p_rdc:selectedRdc});
 if(!d.incidents?.length)throw Error('Belum ada insiden yang bisa diarsipkan.');
 const files=d.evidence||[];const missing=files.filter(x=>!x.exists);
 if(missing.length)throw Error('Ada '+missing.length+' foto yang tidak ditemukan di storage. Arsip tidak dapat dibuat sebelum diperbaiki.');
 const ZIP=await loadZipLib(),zip=new ZIP();
 const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
-const basename='SLS_Breakage_'+month()+'_'+rdc()+'_'+today;
+const basename='SLS_Breakage_'+selectedMonth+'_'+selectedRdc+'_'+today;
 const photoMap={};const photos=[];
 for(let i=0;i<files.length;i++){
  const item=files[i];message('Mengunduh foto '+(i+1)+' / '+files.length+'…');
