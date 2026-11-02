@@ -305,6 +305,8 @@ install();
 }
 function boot(){
 reconcile();
+const app=document.getElementById('app');
+if(app){new MutationObserver(reconcile).observe(app,{attributes:true,attributeFilter:['style']});}
 let counter=0;
 const t=setInterval(()=>{reconcile();if(++counter>120)clearInterval(t)},1000);
 }
