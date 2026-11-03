@@ -185,6 +185,9 @@
     if(!SESSION)return;initState();
     FILTER_DATA=await safeRpc('breakage_filter_summary_v111',{p_years:F.years,p_months:F.months,p_rdcs:F.rdcs},null);if(!FILTER_DATA)return;
     renderCards(FILTER_DATA);renderRdc(FILTER_DATA);renderCause(FILTER_DATA);renderTables(FILTER_DATA);renderHero(FILTER_DATA);try{if(typeof renderSizeFactory107==='function')renderSizeFactory107();}catch(_){ }
+    const ytdFilterState={years:[...F.years],months:[...F.months],rdcs:[...F.rdcs]};
+    window.__SLS_BREAKAGE_FILTER_STATE=ytdFilterState;
+    window.dispatchEvent(new CustomEvent('sls:breakage-filter-applied',{detail:ytdFilterState}));
   }
 
   loadAll=async function(){
