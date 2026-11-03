@@ -4,7 +4,7 @@
 (function(){
   'use strict';
   const core=document.createElement('script');
-  core.src='/period_view_core_v111.js?v=20261029-v109';
+  core.src='/period_view_core_v111.js?v=20261103-v144';
   core.async=false;
 
   function installBrand(){
