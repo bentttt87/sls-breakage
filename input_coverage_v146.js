@@ -125,7 +125,7 @@ function render(d,state){
 function loading(t){mount();for(const id of ['slsInputCoverage146','slsInputCoverageRecap146']){const e=$(id);if(e)e.innerHTML='<div class="sic146-load">'+esc(t)+'</div>'}}
 async function update(state){
  if(!loggedIn())return;
- const s=stateOf(state),key=JSON.stringify(s);if(lastKey===key)return;lastKey=key;
+ const s=stateOf(state),key=JSON.stringify(s);lastKey=key;
  if(!s.years.length||!s.months.length||!s.rdcs.length)return;
  const request=++running;loading('Mengambil data input semua RDC…');
  try{
