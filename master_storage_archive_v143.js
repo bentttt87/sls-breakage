@@ -59,6 +59,126 @@ for(let i=1;i<=24;i++){const m=new Date(d.getFullYear(),d.getMonth()-i,1);
 const k=m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0');
 const o=new Option(m.toLocaleDateString('id-ID',{month:'long',year:'numeric'}),k);sel.add(o)}
 }
+
+/* v145: storage status shown immediately on Monitoring overview and sidebar. */
+function storageLevel145(p){
+ if(!Number.isFinite(p)) return {key:'unknown',label:'Belum tersedia',color:'#a0afc1'};
+ if(p>=90)return {key:'critical',label:'KRITIS',color:'#c13c35'};
+ if(p>=75)return {key:'high',label:'Tinggi',color:'#dc8218'};
+ if(p>=50)return {key:'warning',label:'PERINGATAN',color:'#d39c28'};
+ return {key:'normal',label:'Normal',color:'#168778'};
+}
+function storagePercent145(v){return Number(v).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}
+function installOverviewStorage145(){
+ if(!isMaster())return;
+ if(!$('slsOverviewStorageStyle145')){
+ const style=document.createElement('style');
+ style.id='slsOverviewStorageStyle145';
+ style.textContent=[
+ '#slsOverviewStorage145{border:1px solid #d0deee;border-radius:15px;padding:18px 19px;margin:15px 0 18px;background:#fff;box-shadow:0 3px 13px rgba(15,46,86,.045)}',
+ '#slsOverviewStorage145 .sls-storage-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}',
+ '#slsOverviewStorage145 h3{font-size:19px;font-weight:900;color:#153b6b;margin:0 0 3px}',
+ '#slsOverviewStorage145 .sls-storage-desc{font-size:12px;line-height:1.5;color:#6b819a}',
+ '#slsOverviewStorage145 .sls-storage-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+ '#slsOverviewStorage145 button{border-radius:8px;padding:9px 13px;font-size:13px;min-height:38px;font-weight:850;background:#fff;color:#145a9d;border:1px solid #b1cbe3}',
+ '#slsOverviewStorage145 button:hover{background:#eff7ff}',
+ '#slsOverviewStorage145 .sls-storage-open{background:#165eaa;color:#fff;border-color:#165eaa}',
+ '#slsOverviewStorage145 .sls-storage-open:hover{background:#104f94}',
+ '#slsOverviewStorage145 .sls-storage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}',
+ '#slsOverviewStorage145 .sls-storage-card{padding:14px 16px;background:#f7fafd;border:1px solid #dce8f3;border-radius:11px;min-width:0}',
+ '#slsOverviewStorage145 .sls-storage-card[data-level="warning"]{background:#fffaef;border-color:#efd8a8}',
+ '#slsOverviewStorage145 .sls-storage-card[data-level="high"],#slsOverviewStorage145 .sls-storage-card[data-level="critical"]{background:#fff4f1;border-color:#e9bfb7}',
+ '#slsOverviewStorage145 .sls-storage-label{font-size:13px;font-weight:850;color:#436282;display:flex;justify-content:space-between;gap:12px;align-items:center}',
+ '#slsOverviewStorage145 .sls-storage-val{font-size:26px;font-weight:900;line-height:1.3;color:#143c6a;margin:6px 0}',
+ '#slsOverviewStorage145 .sls-storage-card[data-level="warning"] .sls-storage-val{color:#a77316}',
+ '#slsOverviewStorage145 .sls-storage-card[data-level="high"] .sls-storage-val,#slsOverviewStorage145 .sls-storage-card[data-level="critical"] .sls-storage-val{color:#ad3c35}',
+ '#slsOverviewStorage145 .sls-storage-small{font-size:12px;color:#627b94;line-height:1.5}',
+ '#slsOverviewStorage145 .sls-storage-track{height:10px;background:#e1eaf3;border-radius:20px;overflow:hidden;margin:11px 0 7px}',
+ '#slsOverviewStorage145 .sls-storage-fill{height:100%;background:#168778;width:0;border-radius:20px;transition:width .25s ease}',
+ '#slsOverviewStorage145 .sls-storage-warning{font-size:13px;color:#825619;background:#fff6e8;border:1px solid #eccb91;padding:12px 14px;border-radius:10px;margin-top:11px;line-height:1.55;font-weight:750}',
+ '#slsOverviewStorage145 .sls-storage-warning[data-critical="true"]{color:#a1362f;background:#fff0ef;border-color:#eca9a4}',
+ '#slsOverviewStorage145 .sls-storage-foot{font-size:11px;color:#6d8298;margin-top:10px;line-height:1.5}',
+ '#slsOverviewSide145{background:rgba(255,255,255,.09);border:1px solid rgba(206,230,252,.18);color:white;border-radius:10px;padding:10px;margin:0 0 12px}',
+ '#slsOverviewSide145[data-warn="true"]{background:rgba(180,100,17,.20);border-color:#e4b16b}',
+ '#slsOverviewSide145 .head{font-weight:900;font-size:12px;margin-bottom:8px}',
+ '#slsOverviewSide145[data-warn="true"] .head{color:#ffe2ac}',
+ '#slsOverviewSide145 .line{display:flex;justify-content:space-between;gap:5px;font-size:11px;line-height:1.5}',
+ '#slsOverviewSide145 .line b{font-size:12px;color:#e3f8ff}',
+ '@media(max-width:900px){#slsOverviewStorage145 .sls-storage-grid{grid-template-columns:1fr}}',
+ '@media(max-width:760px){#slsOverviewStorage145{padding:13px;margin:12px 0}#slsOverviewStorage145 h3{font-size:17px}#slsOverviewStorage145 .sls-storage-val{font-size:23px}}'
+ ].join('');
+ document.head.appendChild(style);
+ }
+ const cards=$('summaryCards');
+ if(cards&&!$('slsOverviewStorage145')){
+ const panel=document.createElement('section');
+ panel.id='slsOverviewStorage145';
+ panel.setAttribute('aria-label','Kapasitas penyimpanan SLS untuk Master');
+ panel.innerHTML=
+ '<div class="sls-storage-top"><div><h3>Storage SLS · Status Kapasitas</h3><div class="sls-storage-desc">Peringatan otomatis ketika penggunaan file atau database mencapai 50%</div></div>'+
+ '<div class="sls-storage-actions"><button id="slsStorageRefresh145" type="button">↻ Perbarui</button><button id="slsStorageOpen145" type="button" class="sls-storage-open">Buka Arsip & Storage</button></div></div>'+
+ '<div class="sls-storage-grid">'+
+ '<div class="sls-storage-card" id="slsStorageFile145"><div class="sls-storage-label">Foto & File Storage <span data-status>—</span></div><div class="sls-storage-val" data-pct>—</div><div class="sls-storage-small" data-used>Menunggu data...</div><div class="sls-storage-track"><div class="sls-storage-fill"></div></div><div class="sls-storage-small" data-left>Sisa: —</div></div>'+
+ '<div class="sls-storage-card" id="slsStorageDb145"><div class="sls-storage-label">Database <span data-status>—</span></div><div class="sls-storage-val" data-pct>—</div><div class="sls-storage-small" data-used>Menunggu data...</div><div class="sls-storage-track"><div class="sls-storage-fill"></div></div><div class="sls-storage-small" data-left>Sisa: —</div></div>'+
+ '</div><div class="sls-storage-warning" role="alert" id="slsStorageWarning145" hidden></div><div class="sls-storage-foot" id="slsStorageFoot145">Memuat status Supabase...</div>';
+ cards.insertAdjacentElement('afterend',panel);
+ $('slsStorageRefresh145').onclick=reloadStorage;
+ $('slsStorageOpen145').onclick=()=>{
+ const link=$('slsArchNav143');if(link)link.click();
+ else if(typeof showPage==='function')showPage('archive');
+ };
+ }
+ const focus=document.querySelector('#app .sidebar .side-note');
+ if(focus&&!$('slsOverviewSide145')){
+ const sidebar=document.createElement('div');
+ sidebar.id='slsOverviewSide145';
+ sidebar.innerHTML='<div class="head">◫ Storage SLS</div><div class="line"><span>Foto / File</span><b id="slsStorageSideFile145">—</b></div><div class="line"><span>Database</span><b id="slsStorageSideDb145">—</b></div>';
+ focus.insertAdjacentElement('afterend',sidebar);
+ }
+}
+function renderOverviewStorage145(data){
+ if(!isMaster())return;
+ installOverviewStorage145();
+ const status=[];
+ for(const [id,prefix] of [['slsStorageFile145','storage'],['slsStorageDb145','database']]){
+ const card=$(id);if(!card)continue;
+ const used=Number(data[prefix+'_used_bytes']);
+ const max=Number(data[prefix+'_quota_bytes']);
+ const percent=Number.isFinite(used)&&Number.isFinite(max)&&max>0?used/max*100:NaN;
+ const v=storageLevel145(percent);
+ card.dataset.level=v.key;
+ card.querySelector('[data-status]').textContent=v.label;
+ card.querySelector('[data-pct]').textContent=Number.isFinite(percent)?storagePercent145(percent):'—';
+ card.querySelector('[data-used]').textContent=size(used)+' dari '+size(max)+' terpakai';
+ card.querySelector('[data-left]').textContent='Sisa '+size(Math.max(0,max-used));
+ const fill=card.querySelector('.sls-storage-fill');fill.style.width=Number.isFinite(percent)?Math.min(100,percent)+'%':'0';fill.style.background=v.color;
+ status.push({prefix,p:percent,key:v.key});
+ }
+ const file=status.find(x=>x.prefix==='storage');
+ const db=status.find(x=>x.prefix==='database');
+ const sidebar=$('slsOverviewSide145');
+ if(sidebar){
+ const warning=status.some(x=>x.p>=50);
+ sidebar.dataset.warn=warning?'true':'false';
+ sidebar.querySelector('.head').textContent=warning?'⚠ Storage ≥50%':'◫ Storage SLS';
+ $('slsStorageSideFile145').textContent=Number.isFinite(file?.p)?storagePercent145(file.p):'—';
+ $('slsStorageSideDb145').textContent=Number.isFinite(db?.p)?storagePercent145(db.p):'—';
+ }
+ const warningBox=$('slsStorageWarning145');
+ if(warningBox){
+ const reached=status.filter(x=>x.p>=50);
+ warningBox.hidden=reached.length===0;
+ if(reached.length){
+ const critical=reached.some(x=>x.p>=90),high=reached.some(x=>x.p>=75);
+ const label=critical?'KRITIS':high?'PERINGATAN TINGGI':'PERINGATAN 50%';
+ warningBox.dataset.critical=critical?'true':'false';
+ warningBox.textContent='⚠ '+label+': '+reached.map(x=>(x.prefix==='storage'?'File Storage':'Database')+' '+storagePercent145(x.p)).join(' · ')+'. Periksa arsip bulanan dan backup. Hapus hanya data yang telah Final dan terverifikasi.';
+ }
+ }
+ const foot=$('slsStorageFoot145');
+ if(foot)foot.textContent='Foto Breakage: '+num(data.breakage_files_count)+' file ('+size(data.breakage_files_bytes)+') · '+(data.observed_at||'Waktu pemeriksaan tidak tersedia')+'. Estimasi pemakaian proyek terhadap batas Free, bukan total billing organisasi.';
+}
+
 function setStorage(data){
 for(const kind of ['storage','database']){
 const used=Number(kind==='storage'?data.storage_used_bytes:data.database_used_bytes)||0;
@@ -68,10 +188,11 @@ const root=$('slsArch'+kind+'143');if(!root)continue;
 root.querySelector('[data-remain]').textContent=size(remain)+' sisa';
 root.querySelector('[data-used]').textContent=size(used)+' dari '+size(limit)+' terpakai ('+percent.toFixed(1)+'%)';
 const bar=root.querySelector('.sls-arch-meter span');bar.style.width=Math.min(100,percent)+'%';
-bar.style.background=percent>90?'#c83c35':percent>75?'#e6a436':kind==='storage'?'#208c7d':'#4383c1';
+bar.style.background=percent>=90?'#c83c35':percent>=75?'#e38b23':percent>=50?'#d39b27':kind==='storage'?'#208c7d':'#4383c1';
 }
 $('slsArchFiles143').textContent='Foto Breakage: '+num(data.breakage_files_count)+' file · '+size(data.breakage_files_bytes);
 $('slsArchObserved143').textContent='Terakhir diperiksa: '+(data.observed_at||'—');
+renderOverviewStorage145(data);
 }
 async function reloadStorage(){
 try{const d=await call('breakage_storage_status_master_v142',{});setStorage(d)}
@@ -295,6 +416,7 @@ $('slsArchExport143').onclick=exportZip;
 $('slsArchFile143').addEventListener('change',e=>verifyZip(e.target.files?.[0]));
 $('slsArchPurge143').onclick=purge;
 $('slsArchResume143').onclick=resume;
+installOverviewStorage145();
 reloadStorage();reloadStatus();
 }
 function reconcile(){
@@ -310,6 +432,7 @@ const app=document.getElementById('app');
 if(app){new MutationObserver(reconcile).observe(app,{attributes:true,attributeFilter:['style']});}
 let counter=0;
 const t=setInterval(()=>{reconcile();if(++counter>120)clearInterval(t)},1000);
+setInterval(()=>{if(isMaster()&&installed)reloadStorage()},300000);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
