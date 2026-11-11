@@ -422,7 +422,7 @@ reloadStorage();reloadStatus();
 function reconcile(){
 if(!isMaster()){
 const b=$('slsArchNav143'),s=$('page-archive'),o=$('slsArchOpenMobile143');
-if(b)b.remove();if(s)s.remove();if(o)o.remove();installed=false;return;
+if(b)b.remove();if(s)s.remove();if(o)o.remove();$('slsOverviewStorage145')?.remove();$('slsOverviewSide145')?.remove();installed=false;return;
 }
 install();
 }
