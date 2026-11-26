@@ -36,21 +36,12 @@
           "value": "no-store, no-cache, must-revalidate, max-age=0"
         }
       ]
-    },
-    {
-      "source": "/management_ui_v110.css",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
     }
   ],
   "redirects": [
     {
       "source": "/",
-      "destination": "/monitoring_v109.html?v=110-20261029-1500",
+      "destination": "/monitoring_v109.html?v=109-20261126-1421",
       "permanent": false
     }
   ]
